@@ -18,16 +18,22 @@ Ensure you have the following tools installed before starting:
    - Add the `wasm32-unknown-unknown` target:  
      Refer to the official documentation: [Rustup Toolchains](https://rust-lang.github.io/rustup/concepts/toolchains.html#toolchain-specification).
 
+4. **cargo-script**  
+   - Install cargo-script: [cargo-script](https://github.com/DanielKeep/cargo-script).
 ---
+
+
+
 
 ## **Building the WASM File**
 
 Run the following command to build the project in its optimized release mode:
 
 ```bash
-cargo build --release
-
+cd build
+cargo script deploy.rs
 ```
+
 
 ## **Testing the WASM File**
 
