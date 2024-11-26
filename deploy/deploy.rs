@@ -1,18 +1,18 @@
 use std::process::Command;
 
 fn main() {
-    println!("Building contract 1...");
-    let output_1 = Command::new("cargo")
-        .args(["build", "--release"])
-        .current_dir("../contracts/hello-world") 
-        .output()
-        .expect("Failed to build contract 1");
 
-    if !output_1.status.success() {
-        eprintln!("Error building contract 1: {}", String::from_utf8_lossy(&output_1.stderr));
+
+    println!("Building contract 2...");
+    let output_2 = Command::new("cargo")
+        .args(["build", "--release"])
+        .current_dir("../contracts/vft") 
+        .output()
+        .expect("Failed to build contract 2");
+
+    if !output_2.status.success() {
+        eprintln!("Error building contract 2: {}", String::from_utf8_lossy(&output_2.stderr));
         return;
     }
-
-
-    println!("Contract hello-world built successfully!");
+    println!("Contract vft built successfully!");
 }
