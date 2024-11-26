@@ -1,6 +1,6 @@
 use sails_rs::{calls::*, gtest::{calls::*, System}};
 
-use distribution_contracts_vara_client::traits::*;
+use hello_world_client::traits::*;
 
 const ACTOR_ID: u64 = 42;
 
@@ -14,9 +14,9 @@ async fn do_something_works() {
     remoting.system().init_logger();
 
     // Submit program code into the system
-    let program_code_id = remoting.system().submit_code(distribution_contracts_vara::WASM_BINARY);
+    let program_code_id = remoting.system().submit_code(hello_world::WASM_BINARY);
 
-    let program_factory = distribution_contracts_vara_client::DistributionContractsVaraFactory::new(remoting.clone());
+    let program_factory = hello_world_client::HelloWorldFactory::new(remoting.clone());
 
     let program_id = program_factory
         .new() // Call program's constructor (see app/src/lib.rs:29)
@@ -24,7 +24,7 @@ async fn do_something_works() {
         .await
         .unwrap();
 
-    let mut service_client = distribution_contracts_vara_client::DistributionContractsVara::new(remoting.clone());
+    let mut service_client = hello_world_client::HelloWorld::new(remoting.clone());
 
     let result = service_client
         .do_something() // Call service's method (see app/src/lib.rs:14)
@@ -32,7 +32,7 @@ async fn do_something_works() {
         .await
         .unwrap();
 
-    assert_eq!(result, "Hello from DistributionContractsVara!".to_string());
+    assert_eq!(result, "Hello from HelloWorld!".to_string());
 }
 
 #[tokio::test]
@@ -45,9 +45,9 @@ async fn get_something_works() {
     remoting.system().init_logger();
 
     // Submit program code into the system
-    let program_code_id = remoting.system().submit_code(distribution_contracts_vara::WASM_BINARY);
+    let program_code_id = remoting.system().submit_code(hello_world::WASM_BINARY);
 
-    let program_factory = distribution_contracts_vara_client::DistributionContractsVaraFactory::new(remoting.clone());
+    let program_factory = hello_world_client::HelloWorldFactory::new(remoting.clone());
 
     let program_id = program_factory
         .new() // Call program's constructor (see app/src/lib.rs:29)
@@ -55,7 +55,7 @@ async fn get_something_works() {
         .await
         .unwrap();
 
-    let service_client = distribution_contracts_vara_client::DistributionContractsVara::new(remoting.clone());
+    let service_client = hello_world_client::HelloWorld::new(remoting.clone());
 
     let result = service_client
         .get_something() // Call service's query (see app/src/lib.rs:19)
@@ -63,5 +63,5 @@ async fn get_something_works() {
         .await
         .unwrap();
 
-    assert_eq!(result, "Hello from DistributionContractsVara!".to_string());
+    assert_eq!(result, "Hello from HelloWorld!".to_string());
 }

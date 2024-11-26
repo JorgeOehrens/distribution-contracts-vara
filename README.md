@@ -1,9 +1,36 @@
-## The **distribution-contracts-vara** program
+# **Dob-SC**
 
-The program workspace includes the following packages:
-- `distribution-contracts-vara` is the package allowing to build WASM binary for the program and IDL file for it.  
-  The package also includes integration tests for the program in the `tests` sub-folder
-- `distribution-contracts-vara-app` is the package containing business logic for the program represented by the `DistributionContractsVaraService` structure.  
-- `distribution-contracts-vara-client` is the package containing the client for the program allowing to interact with it from another program, tests, or
-  off-chain client.
+Dob-SC is a project designed for [brief description of the project's purpose].
 
+---
+
+## **Prerequisites**
+
+Ensure you have the following tools installed before starting:
+
+1. **Xcode**  
+   - Download and install Xcode from: [Apple Developer](https://developer.apple.com/xcode/).
+
+2. **Rust and Rustup**  
+   - Install Rust and its version manager: [rustup.rs](https://rustup.rs/).
+
+3. **WASM Target**  
+   - Add the `wasm32-unknown-unknown` target:  
+     Refer to the official documentation: [Rustup Toolchains](https://rust-lang.github.io/rustup/concepts/toolchains.html#toolchain-specification).
+
+---
+
+## **Building the WASM File**
+
+Run the following command to build the project in its optimized release mode:
+
+```bash
+cargo build --release
+
+```
+
+## **Testing the WASM File**
+
+```bash
+cargo test
+```

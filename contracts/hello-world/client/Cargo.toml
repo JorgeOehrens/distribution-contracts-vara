@@ -1,5 +1,5 @@
 [package]
-name = "distribution-contracts-vara-client"
+name = "hello-world-client"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,7 +8,7 @@ mockall = { version = "0.12", optional = true }
 sails-rs = "0.6.3"
 
 [build-dependencies]
-distribution-contracts-vara-app = { path = "../app" }
+hello-world-app = { path = "../app" }
 sails-client-gen = "0.6.3"
 sails-idl-gen = "0.6.3"
 

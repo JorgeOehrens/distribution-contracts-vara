@@ -4,21 +4,21 @@ members = ["client"]
 
 
 [package]
-name = "distribution-contracts-vara"
+name = "hello-world"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-distribution-contracts-vara-app = { path = "app" }
+hello-world-app = { path = "app" }
 
 [build-dependencies]
-distribution-contracts-vara-app = { path = "app" }
+hello-world-app = { path = "app" }
 sails-rs = { version = "0.6.3", features = ["wasm-builder"] }
 sails-idl-gen = "0.6.3"
 
 [dev-dependencies]
-distribution-contracts-vara = { path = ".", features = ["wasm-binary"] }
-distribution-contracts-vara-client = { path = "client" }
+hello-world = { path = ".", features = ["wasm-binary"] }
+hello-world-client = { path = "client" }
 sails-rs = { version = "0.6.3", features = ["gtest"] }
 tokio = { version = "1.41", features = ["rt", "macros"] }
 

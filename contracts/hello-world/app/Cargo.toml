@@ -1,5 +1,5 @@
 [package]
-name = "distribution-contracts-vara-app"
+name = "hello-world-app"
 version = "0.1.0"
 edition = "2021"
 
