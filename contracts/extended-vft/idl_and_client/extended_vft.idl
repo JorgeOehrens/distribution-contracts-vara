@@ -1,5 +1,5 @@
 constructor {
-  New : (name: str, symbol: str, decimals: u8);
+  New : (name: str, symbol: str, decimals: u8, _type_pool: str, _distribution_mode: str, _access_type: str);
 };
 
 service Vft {

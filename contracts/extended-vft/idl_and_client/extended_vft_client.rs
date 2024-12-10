@@ -19,10 +19,25 @@ impl<R> ExtendedVftFactory<R> {
 }
 impl<R: Remoting + Clone> traits::ExtendedVftFactory for ExtendedVftFactory<R> {
     type Args = R::Args;
-    fn new(&self, name: String, symbol: String, decimals: u8) -> impl Activation<Args = R::Args> {
+    fn new(
+        &self,
+        name: String,
+        symbol: String,
+        decimals: u8,
+        _type_pool: String,
+        _distribution_mode: String,
+        _access_type: String,
+    ) -> impl Activation<Args = R::Args> {
         RemotingAction::<_, extended_vft_factory::io::New>::new(
             self.remoting.clone(),
-            (name, symbol, decimals),
+            (
+                name,
+                symbol,
+                decimals,
+                _type_pool,
+                _distribution_mode,
+                _access_type,
+            ),
         )
     }
 }
@@ -35,13 +50,27 @@ pub mod extended_vft_factory {
         pub struct New(());
         impl New {
             #[allow(dead_code)]
-            pub fn encode_call(name: String, symbol: String, decimals: u8) -> Vec<u8> {
-                <New as ActionIo>::encode_call(&(name, symbol, decimals))
+            pub fn encode_call(
+                name: String,
+                symbol: String,
+                decimals: u8,
+                _type_pool: String,
+                _distribution_mode: String,
+                _access_type: String,
+            ) -> Vec<u8> {
+                <New as ActionIo>::encode_call(&(
+                    name,
+                    symbol,
+                    decimals,
+                    _type_pool,
+                    _distribution_mode,
+                    _access_type,
+                ))
             }
         }
         impl ActionIo for New {
             const ROUTE: &'static [u8] = &[12, 78, 101, 119];
-            type Params = (String, String, u8);
+            type Params = (String, String, u8, String, String, String);
             type Reply = ();
         }
     }
@@ -461,6 +490,9 @@ pub mod traits {
             name: String,
             symbol: String,
             decimals: u8,
+            _type_pool: String,
+            _distribution_mode: String,
+            _access_type: String,
         ) -> impl Activation<Args = Self::Args>;
     }
 

@@ -8,7 +8,7 @@ pub struct ExtendedVftProgram(());
 
 #[program]
 impl ExtendedVftProgram {
-    pub fn new(name: String, symbol: String, decimals: u8) -> Self {
+    pub fn new(name: String, symbol: String, decimals: u8, _type_pool:String, _distribution_mode:String, _access_type: String) -> Self {
         ExtendedService::seed(name, symbol, decimals);
         Self(())
     }

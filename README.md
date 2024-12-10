@@ -33,6 +33,11 @@ Run the following command to build the project in its optimized release mode:
 cd build
 cargo script deploy.rs
 ```
+```bash
+cd contracts 
+cd <name contract>
+cargo +nightly build --release
+```
 
 
 ## **Testing the WASM File**
