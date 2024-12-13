@@ -8,6 +8,16 @@ use sails_rs::{
 };mod utils;
 use utils::*;
 
+use gmeta::{InOut, Metadata, Out};
+
+pub struct ProgramMetadata;
+impl Metadata for ProgramMetadata {
+    type Init = InOut<InitData, InitReply>;
+    type Handle = InOut<HandleAction, Event>;
+    type Reply = ();
+    type Others = ();
+    type State = Out<State>;
+}
 static mut STORAGE: Option<Pool> = None;
 
 struct PoolService(());
@@ -32,6 +42,9 @@ pub enum Event {
     },
     OwnerAddition {
         owner: ActorId,
+    },
+    PaticipantAddition {
+        participant: ActorId,
     },
     OwnerRemoval {
         owner: ActorId,
@@ -101,6 +114,17 @@ impl PoolService {
         self.notify_on(Event::OwnerAddition { owner })
             .expect("Notification Error");
     }
+    pub fn add_participant(&mut self, participant: ActorId) {
+        let wallet = self.get_mut();
+        wallet.validate_only_wallet();
+        wallet.validate_participant_doesnt_exist(&participant);
+        wallet.participants_pool.insert(participant);
+        self.notify_on(Event::PaticipantAddition { participant })
+            .expect("Notification Error");
+    }
+
+ 
+
     pub fn remove_owner(&mut self, owner: ActorId) {
         let wallet = self.get_mut();
         wallet.validate_only_wallet();
@@ -195,33 +219,24 @@ impl PoolService {
         let wallet = self.get_mut();
         let msg_source = msg::source();
     
-        // Obtener los participantes desde la pool
         let participants: Vec<ActorId> = wallet.participants_pool.iter().cloned().collect();
     
-        // Verificar si hay participantes
         if participants.is_empty() {
-            msg::reply("No participants available in the pool", 0).expect("Failed to reply");
             return;
         }
     
-        // Obtener el valor disponible en la pool
         let total_value = exec::value_available();
     
-        // Verificar si hay suficiente valor en la pool
         if total_value <= 1 {
-            msg::reply("Not enough value available in the pool", 0).expect("Failed to reply");
             return;
         }
     
-        // Reservar 1 VARA para la pool y calcular el valor distribuible
         let distributable_value = total_value - 1;
     
-        // Calcular el valor por participante
         let value_per_participant = distributable_value / participants.len() as u128;
     
         // Verificar si el valor por participante es válido
         if value_per_participant == 0 {
-            msg::reply("Total value too small to distribute", 0).expect("Failed to reply");
             return;
         }
     
@@ -239,8 +254,6 @@ impl PoolService {
                 .expect("Notification Error");
         }
     
-        // Notificar distribución completa
-        msg::reply("Distribution completed successfully", 0).expect("Failed to reply");
     }
     
     

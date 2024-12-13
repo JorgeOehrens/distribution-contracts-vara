@@ -37,6 +37,13 @@ impl Pool {
         }
     }
 
+
+    pub fn validate_participant_doesnt_exist(&self, participant: &ActorId) {
+        if self.has_participant(participant) {
+            panic!("Owner already exists")
+        }
+    }
+
     pub fn validate_owner_exists(&self, owner: &ActorId) {
         if !self.has_owner(owner) {
             panic!("Owner doesn't exists")
@@ -85,6 +92,9 @@ impl Pool {
 
     fn has_owner(&self, owner: &ActorId) -> bool {
         self.owners.contains(owner)
+    }
+    fn has_participant(&self, participant: &ActorId) -> bool {
+        self.participants_pool.contains(participant)
     }
 
     /// Allows to change the number of required confirmations. Transaction has to be sent by wallet.

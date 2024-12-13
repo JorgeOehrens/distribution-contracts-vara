@@ -18,6 +18,7 @@ pool-client = { path = "client" }
 sails-rs = { workspace = true, features = ["gtest"] }
 tokio = { workspace = true, features = ["rt", "macros"] }
 gtest.workspace = true
+gmeta.workspace = true
 
 [features]
 wasm-binary = []
