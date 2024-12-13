@@ -8,16 +8,9 @@ use sails_rs::{
 };mod utils;
 use utils::*;
 
-use gmeta::{InOut, Metadata, Out};
 
 pub struct ProgramMetadata;
-impl Metadata for ProgramMetadata {
-    type Init = InOut<InitData, InitReply>;
-    type Handle = InOut<HandleAction, Event>;
-    type Reply = ();
-    type Others = ();
-    type State = Out<State>;
-}
+
 static mut STORAGE: Option<Pool> = None;
 
 struct PoolService(());
