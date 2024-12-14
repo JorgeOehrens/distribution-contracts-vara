@@ -1,0 +1,53 @@
+type State = struct {
+  name: str,
+  type_pool: str,
+  distribution_mode: str,
+  access_type: str,
+  transactions: vec struct { u256, Transaction },
+  confirmations: vec struct { u256, vec actor_id },
+  owners: vec actor_id,
+  participants_pool: vec actor_id,
+  required: u32,
+  transaction_count: u256,
+};
+
+type Transaction = struct {
+  destination: actor_id,
+  payload: vec u8,
+  value: u128,
+  description: opt str,
+  executed: bool,
+};
+
+constructor {
+  New : (name: str, type_pool: str, distribution_mode: str, access_type: str, owners: vec actor_id, participants_pool: vec actor_id, required: u32);
+};
+
+service Pool {
+  AddOwner : (owner: actor_id) -> null;
+  AddParticipant : (participant: actor_id) -> null;
+  ChangeRequiredConfirmationsCount : (count: u32) -> null;
+  ConfirmTransaction : (transaction_id: u256) -> null;
+  DistributionPool : (data: vec u8, total_value: u128, description: opt str) -> null;
+  DistributionPool2 : (participants: vec actor_id, data: vec u8, total_value: u128, description: opt str) -> null;
+  DistributionPoolBalance : (data: vec u8, description: opt str) -> null;
+  ExecuteTransaction : (transaction_id: u256) -> null;
+  RemoveOwner : (owner: actor_id) -> null;
+  ReplaceOwner : (old_owner: actor_id, new_owner: actor_id) -> null;
+  RevokeConfirmation : (transaction_id: u256) -> null;
+  SubmitTransaction : (destination: actor_id, data: vec u8, value: u128, description: opt str) -> null;
+  query GetState : () -> State;
+
+  events {
+    Confirmation: struct { sender: actor_id, transaction_id: u256 };
+    Revocation: struct { sender: actor_id, transaction_id: u256 };
+    Submission: struct { transaction_id: u256 };
+    Execution: struct { transaction_id: u256 };
+    OwnerAddition: struct { owner: actor_id };
+    PaticipantAddition: struct { participant: actor_id };
+    OwnerRemoval: struct { owner: actor_id };
+    OwnerReplace: struct { old_owner: actor_id, new_owner: actor_id };
+    RequirementChange: u256;
+  }
+};
+

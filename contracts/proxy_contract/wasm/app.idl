@@ -1,0 +1,87 @@
+type ProxyPingCallerEvent = enum {
+  Test,
+  PingContractStateAllCalls: vec struct { actor_id, PingEnum },
+  PingContractStateLastWhoCall: struct { actor_id, PingEnum },
+  PingContractResponse: PingEnum,
+  Error: ProxyPingCallerError,
+};
+
+type PingEnum = enum {
+  Ping,
+  Pong,
+};
+
+type ProxyPingCallerError = enum {
+  PingContractIdNotSet,
+  PingContractError: str,
+};
+
+type ProxyEvent = enum {
+  PingContractIdSet,
+  TrafficLightContractIdSet,
+  AdminAdded: actor_id,
+  PingContractId: opt actor_id,
+  TrafficLightContractId: opt actor_id,
+  ContractsId: ContractsId,
+  Error: ProxyErrors,
+};
+
+type ContractsId = struct {
+  ping_contract_id: opt actor_id,
+  traffic_light_contract_id: opt actor_id,
+};
+
+type ProxyErrors = enum {
+  OnlyAdminsCanChangeContactId,
+  AdminExistsInContract: actor_id,
+};
+
+type ProxyTrafficLightCallerEvent = enum {
+  Test,
+  TrafficLightContractResponse: TrafficLightEvent,
+  TrafficLightContractState: IoTrafficLightState,
+  Error: ProxyTrafficLightCallerError,
+};
+
+type TrafficLightEvent = enum {
+  Green,
+  Yellow,
+  Red,
+};
+
+type IoTrafficLightState = struct {
+  current_light: str,
+  all_users: vec struct { actor_id, str },
+};
+
+type ProxyTrafficLightCallerError = enum {
+  TrafficLightContractIdNotSet,
+  TrafficLightContractError: str,
+};
+
+constructor {
+  New : ();
+  NewWithContractsId : (ping_contract_id: actor_id, traffic_light_contract_id: actor_id);
+};
+
+service PingCaller {
+  CallPing : () -> ProxyPingCallerEvent;
+  CallPong : () -> ProxyPingCallerEvent;
+  query CallAllCalls : () -> ProxyPingCallerEvent;
+  query CallLastWhoCall : () -> ProxyPingCallerEvent;
+};
+
+service Proxy {
+  AddAdmin : (new_admin: actor_id) -> ProxyEvent;
+  ChangePingContractId : (contract_id: actor_id) -> ProxyEvent;
+  ChangeTrafficLightContractId : (contract_id: actor_id) -> ProxyEvent;
+  query ContractsId : () -> ProxyEvent;
+};
+
+service TrafficLightCaller {
+  CallGreen : () -> ProxyTrafficLightCallerEvent;
+  CallRed : () -> ProxyTrafficLightCallerEvent;
+  CallYellow : () -> ProxyTrafficLightCallerEvent;
+  query CallTrafficLightState : () -> ProxyTrafficLightCallerEvent;
+};
+
