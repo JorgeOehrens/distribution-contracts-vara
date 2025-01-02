@@ -11,12 +11,14 @@ pub struct ExtendedVftFactory<R> {
     #[allow(dead_code)]
     remoting: R,
 }
+
 impl<R> ExtendedVftFactory<R> {
     #[allow(unused)]
     pub fn new(remoting: R) -> Self {
         Self { remoting }
     }
 }
+
 impl<R: Remoting + Clone> traits::ExtendedVftFactory for ExtendedVftFactory<R> {
     type Args = R::Args;
     fn new(&self, name: String, symbol: String, decimals: u8) -> impl Activation<Args = R::Args> {
@@ -33,12 +35,14 @@ pub mod extended_vft_factory {
         use super::*;
         use sails_rs::calls::ActionIo;
         pub struct New(());
+
         impl New {
             #[allow(dead_code)]
             pub fn encode_call(name: String, symbol: String, decimals: u8) -> Vec<u8> {
                 <New as ActionIo>::encode_call(&(name, symbol, decimals))
             }
         }
+
         impl ActionIo for New {
             const ROUTE: &'static [u8] = &[12, 78, 101, 119];
             type Params = (String, String, u8);
@@ -49,11 +53,13 @@ pub mod extended_vft_factory {
 pub struct Vft<R> {
     remoting: R,
 }
+
 impl<R> Vft<R> {
     pub fn new(remoting: R) -> Self {
         Self { remoting }
     }
 }
+
 impl<R: Remoting + Clone> traits::Vft for Vft<R> {
     type Args = R::Args;
     fn burn(&mut self, from: ActorId, value: U256) -> impl Call<Output = bool, Args = R::Args> {
@@ -138,24 +144,28 @@ pub mod vft {
         use super::*;
         use sails_rs::calls::ActionIo;
         pub struct Burn(());
+
         impl Burn {
             #[allow(dead_code)]
             pub fn encode_call(from: ActorId, value: U256) -> Vec<u8> {
                 <Burn as ActionIo>::encode_call(&(from, value))
             }
         }
+
         impl ActionIo for Burn {
             const ROUTE: &'static [u8] = &[12, 86, 102, 116, 16, 66, 117, 114, 110];
             type Params = (ActorId, U256);
             type Reply = bool;
         }
         pub struct GrantAdminRole(());
+
         impl GrantAdminRole {
             #[allow(dead_code)]
             pub fn encode_call(to: ActorId) -> Vec<u8> {
                 <GrantAdminRole as ActionIo>::encode_call(&to)
             }
         }
+
         impl ActionIo for GrantAdminRole {
             const ROUTE: &'static [u8] = &[
                 12, 86, 102, 116, 56, 71, 114, 97, 110, 116, 65, 100, 109, 105, 110, 82, 111, 108,
@@ -165,12 +175,14 @@ pub mod vft {
             type Reply = ();
         }
         pub struct GrantBurnerRole(());
+
         impl GrantBurnerRole {
             #[allow(dead_code)]
             pub fn encode_call(to: ActorId) -> Vec<u8> {
                 <GrantBurnerRole as ActionIo>::encode_call(&to)
             }
         }
+
         impl ActionIo for GrantBurnerRole {
             const ROUTE: &'static [u8] = &[
                 12, 86, 102, 116, 60, 71, 114, 97, 110, 116, 66, 117, 114, 110, 101, 114, 82, 111,
@@ -180,12 +192,14 @@ pub mod vft {
             type Reply = ();
         }
         pub struct GrantMinterRole(());
+
         impl GrantMinterRole {
             #[allow(dead_code)]
             pub fn encode_call(to: ActorId) -> Vec<u8> {
                 <GrantMinterRole as ActionIo>::encode_call(&to)
             }
         }
+
         impl ActionIo for GrantMinterRole {
             const ROUTE: &'static [u8] = &[
                 12, 86, 102, 116, 60, 71, 114, 97, 110, 116, 77, 105, 110, 116, 101, 114, 82, 111,
@@ -195,24 +209,28 @@ pub mod vft {
             type Reply = ();
         }
         pub struct Mint(());
+
         impl Mint {
             #[allow(dead_code)]
             pub fn encode_call(to: ActorId, value: U256) -> Vec<u8> {
                 <Mint as ActionIo>::encode_call(&(to, value))
             }
         }
+
         impl ActionIo for Mint {
             const ROUTE: &'static [u8] = &[12, 86, 102, 116, 16, 77, 105, 110, 116];
             type Params = (ActorId, U256);
             type Reply = bool;
         }
         pub struct RevokeAdminRole(());
+
         impl RevokeAdminRole {
             #[allow(dead_code)]
             pub fn encode_call(from: ActorId) -> Vec<u8> {
                 <RevokeAdminRole as ActionIo>::encode_call(&from)
             }
         }
+
         impl ActionIo for RevokeAdminRole {
             const ROUTE: &'static [u8] = &[
                 12, 86, 102, 116, 60, 82, 101, 118, 111, 107, 101, 65, 100, 109, 105, 110, 82, 111,
@@ -222,12 +240,14 @@ pub mod vft {
             type Reply = ();
         }
         pub struct RevokeBurnerRole(());
+
         impl RevokeBurnerRole {
             #[allow(dead_code)]
             pub fn encode_call(from: ActorId) -> Vec<u8> {
                 <RevokeBurnerRole as ActionIo>::encode_call(&from)
             }
         }
+
         impl ActionIo for RevokeBurnerRole {
             const ROUTE: &'static [u8] = &[
                 12, 86, 102, 116, 64, 82, 101, 118, 111, 107, 101, 66, 117, 114, 110, 101, 114, 82,
@@ -237,12 +257,14 @@ pub mod vft {
             type Reply = ();
         }
         pub struct RevokeMinterRole(());
+
         impl RevokeMinterRole {
             #[allow(dead_code)]
             pub fn encode_call(from: ActorId) -> Vec<u8> {
                 <RevokeMinterRole as ActionIo>::encode_call(&from)
             }
         }
+
         impl ActionIo for RevokeMinterRole {
             const ROUTE: &'static [u8] = &[
                 12, 86, 102, 116, 64, 82, 101, 118, 111, 107, 101, 77, 105, 110, 116, 101, 114, 82,
@@ -252,24 +274,28 @@ pub mod vft {
             type Reply = ();
         }
         pub struct Approve(());
+
         impl Approve {
             #[allow(dead_code)]
             pub fn encode_call(spender: ActorId, value: U256) -> Vec<u8> {
                 <Approve as ActionIo>::encode_call(&(spender, value))
             }
         }
+
         impl ActionIo for Approve {
             const ROUTE: &'static [u8] = &[12, 86, 102, 116, 28, 65, 112, 112, 114, 111, 118, 101];
             type Params = (ActorId, U256);
             type Reply = bool;
         }
         pub struct Transfer(());
+
         impl Transfer {
             #[allow(dead_code)]
             pub fn encode_call(to: ActorId, value: U256) -> Vec<u8> {
                 <Transfer as ActionIo>::encode_call(&(to, value))
             }
         }
+
         impl ActionIo for Transfer {
             const ROUTE: &'static [u8] =
                 &[12, 86, 102, 116, 32, 84, 114, 97, 110, 115, 102, 101, 114];
@@ -277,12 +303,14 @@ pub mod vft {
             type Reply = bool;
         }
         pub struct TransferFrom(());
+
         impl TransferFrom {
             #[allow(dead_code)]
             pub fn encode_call(from: ActorId, to: ActorId, value: U256) -> Vec<u8> {
                 <TransferFrom as ActionIo>::encode_call(&(from, to, value))
             }
         }
+
         impl ActionIo for TransferFrom {
             const ROUTE: &'static [u8] = &[
                 12, 86, 102, 116, 48, 84, 114, 97, 110, 115, 102, 101, 114, 70, 114, 111, 109,
@@ -291,48 +319,56 @@ pub mod vft {
             type Reply = bool;
         }
         pub struct Admins(());
+
         impl Admins {
             #[allow(dead_code)]
             pub fn encode_call() -> Vec<u8> {
                 <Admins as ActionIo>::encode_call(&())
             }
         }
+
         impl ActionIo for Admins {
             const ROUTE: &'static [u8] = &[12, 86, 102, 116, 24, 65, 100, 109, 105, 110, 115];
             type Params = ();
             type Reply = Vec<ActorId>;
         }
         pub struct Burners(());
+
         impl Burners {
             #[allow(dead_code)]
             pub fn encode_call() -> Vec<u8> {
                 <Burners as ActionIo>::encode_call(&())
             }
         }
+
         impl ActionIo for Burners {
             const ROUTE: &'static [u8] = &[12, 86, 102, 116, 28, 66, 117, 114, 110, 101, 114, 115];
             type Params = ();
             type Reply = Vec<ActorId>;
         }
         pub struct Minters(());
+
         impl Minters {
             #[allow(dead_code)]
             pub fn encode_call() -> Vec<u8> {
                 <Minters as ActionIo>::encode_call(&())
             }
         }
+
         impl ActionIo for Minters {
             const ROUTE: &'static [u8] = &[12, 86, 102, 116, 28, 77, 105, 110, 116, 101, 114, 115];
             type Params = ();
             type Reply = Vec<ActorId>;
         }
         pub struct Allowance(());
+
         impl Allowance {
             #[allow(dead_code)]
             pub fn encode_call(owner: ActorId, spender: ActorId) -> Vec<u8> {
                 <Allowance as ActionIo>::encode_call(&(owner, spender))
             }
         }
+
         impl ActionIo for Allowance {
             const ROUTE: &'static [u8] = &[
                 12, 86, 102, 116, 36, 65, 108, 108, 111, 119, 97, 110, 99, 101,
@@ -341,12 +377,14 @@ pub mod vft {
             type Reply = U256;
         }
         pub struct BalanceOf(());
+
         impl BalanceOf {
             #[allow(dead_code)]
             pub fn encode_call(account: ActorId) -> Vec<u8> {
                 <BalanceOf as ActionIo>::encode_call(&account)
             }
         }
+
         impl ActionIo for BalanceOf {
             const ROUTE: &'static [u8] =
                 &[12, 86, 102, 116, 36, 66, 97, 108, 97, 110, 99, 101, 79, 102];
@@ -354,12 +392,14 @@ pub mod vft {
             type Reply = U256;
         }
         pub struct Decimals(());
+
         impl Decimals {
             #[allow(dead_code)]
             pub fn encode_call() -> Vec<u8> {
                 <Decimals as ActionIo>::encode_call(&())
             }
         }
+
         impl ActionIo for Decimals {
             const ROUTE: &'static [u8] =
                 &[12, 86, 102, 116, 32, 68, 101, 99, 105, 109, 97, 108, 115];
@@ -367,36 +407,42 @@ pub mod vft {
             type Reply = u8;
         }
         pub struct Name(());
+
         impl Name {
             #[allow(dead_code)]
             pub fn encode_call() -> Vec<u8> {
                 <Name as ActionIo>::encode_call(&())
             }
         }
+
         impl ActionIo for Name {
             const ROUTE: &'static [u8] = &[12, 86, 102, 116, 16, 78, 97, 109, 101];
             type Params = ();
             type Reply = String;
         }
         pub struct Symbol(());
+
         impl Symbol {
             #[allow(dead_code)]
             pub fn encode_call() -> Vec<u8> {
                 <Symbol as ActionIo>::encode_call(&())
             }
         }
+
         impl ActionIo for Symbol {
             const ROUTE: &'static [u8] = &[12, 86, 102, 116, 24, 83, 121, 109, 98, 111, 108];
             type Params = ();
             type Reply = String;
         }
         pub struct TotalSupply(());
+
         impl TotalSupply {
             #[allow(dead_code)]
             pub fn encode_call() -> Vec<u8> {
                 <TotalSupply as ActionIo>::encode_call(&())
             }
         }
+
         impl ActionIo for TotalSupply {
             const ROUTE: &'static [u8] = &[
                 12, 86, 102, 116, 44, 84, 111, 116, 97, 108, 83, 117, 112, 112, 108, 121,
@@ -443,6 +489,7 @@ pub mod vft {
             ];
             type Event = Self;
         }
+
         pub fn listener<R: Listener<Vec<u8>>>(remoting: R) -> impl Listener<VftEvents> {
             RemotingListener::<_, VftEvents>::new(remoting)
         }

@@ -1,5 +1,5 @@
 [package]
-name = "extended-vft"
+name = "vft"
 version = "1.1.0"
 license = "MIT"
 edition = "2021"
