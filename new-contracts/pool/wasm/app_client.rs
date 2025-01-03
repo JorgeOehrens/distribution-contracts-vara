@@ -139,6 +139,15 @@ impl<R: Remoting + Clone> traits::VftManager for VftManager<R> {
             new_admin_address,
         )
     }
+    fn add_participant(
+        &mut self,
+        participant: ActorId,
+    ) -> impl Call<Output = VftManagerEvents, Args = R::Args> {
+        RemotingAction::<_, vft_manager::io::AddParticipant>::new(
+            self.remoting.clone(),
+            participant,
+        )
+    }
     fn add_tokens_to_contract(
         &mut self,
         tokens_to_add: u128,
@@ -148,6 +157,16 @@ impl<R: Remoting + Clone> traits::VftManager for VftManager<R> {
             tokens_to_add,
         )
     }
+    fn add_transaction(
+        &mut self,
+        destination: ActorId,
+        value: u128,
+    ) -> impl Call<Output = U256, Args = R::Args> {
+        RemotingAction::<_, vft_manager::io::AddTransaction>::new(
+            self.remoting.clone(),
+            (destination, value),
+        )
+    }
     fn burn_tokens_from_contract(
         &mut self,
         tokens_to_burn: u128,
@@ -155,6 +174,12 @@ impl<R: Remoting + Clone> traits::VftManager for VftManager<R> {
         RemotingAction::<_, vft_manager::io::BurnTokensFromContract>::new(
             self.remoting.clone(),
             tokens_to_burn,
+        )
+    }
+    fn distribution_pool_balance(&mut self) -> impl Call<Output = (), Args = R::Args> {
+        RemotingAction::<_, vft_manager::io::DistributionPoolBalance>::new(
+            self.remoting.clone(),
+            (),
         )
     }
     fn set_max_tokens_to_burn(
@@ -262,6 +287,23 @@ pub mod vft_manager {
             type Params = ActorId;
             type Reply = super::VftManagerEvents;
         }
+        pub struct AddParticipant(());
+
+        impl AddParticipant {
+            #[allow(dead_code)]
+            pub fn encode_call(participant: ActorId) -> Vec<u8> {
+                <AddParticipant as ActionIo>::encode_call(&participant)
+            }
+        }
+
+        impl ActionIo for AddParticipant {
+            const ROUTE: &'static [u8] = &[
+                40, 86, 102, 116, 77, 97, 110, 97, 103, 101, 114, 56, 65, 100, 100, 80, 97, 114,
+                116, 105, 99, 105, 112, 97, 110, 116,
+            ];
+            type Params = ActorId;
+            type Reply = super::VftManagerEvents;
+        }
         pub struct AddTokensToContract(());
 
         impl AddTokensToContract {
@@ -279,6 +321,23 @@ pub mod vft_manager {
             type Params = u128;
             type Reply = super::VftManagerEvents;
         }
+        pub struct AddTransaction(());
+
+        impl AddTransaction {
+            #[allow(dead_code)]
+            pub fn encode_call(destination: ActorId, value: u128) -> Vec<u8> {
+                <AddTransaction as ActionIo>::encode_call(&(destination, value))
+            }
+        }
+
+        impl ActionIo for AddTransaction {
+            const ROUTE: &'static [u8] = &[
+                40, 86, 102, 116, 77, 97, 110, 97, 103, 101, 114, 56, 65, 100, 100, 84, 114, 97,
+                110, 115, 97, 99, 116, 105, 111, 110,
+            ];
+            type Params = (ActorId, u128);
+            type Reply = U256;
+        }
         pub struct BurnTokensFromContract(());
 
         impl BurnTokensFromContract {
@@ -295,6 +354,23 @@ pub mod vft_manager {
             ];
             type Params = u128;
             type Reply = super::VftManagerEvents;
+        }
+        pub struct DistributionPoolBalance(());
+
+        impl DistributionPoolBalance {
+            #[allow(dead_code)]
+            pub fn encode_call() -> Vec<u8> {
+                <DistributionPoolBalance as ActionIo>::encode_call(&())
+            }
+        }
+
+        impl ActionIo for DistributionPoolBalance {
+            const ROUTE: &'static [u8] = &[
+                40, 86, 102, 116, 77, 97, 110, 97, 103, 101, 114, 92, 68, 105, 115, 116, 114, 105,
+                98, 117, 116, 105, 111, 110, 80, 111, 111, 108, 66, 97, 108, 97, 110, 99, 101,
+            ];
+            type Params = ();
+            type Reply = ();
         }
         pub struct SetMaxTokensToBurn(());
 
@@ -473,6 +549,7 @@ pub mod vft_manager {
 #[scale_info(crate = sails_rs::scale_info)]
 pub enum VftManagerEvents {
     NewAdminAdded(ActorId),
+    NewParticipant(ActorId),
     RefundOfVaras(u128),
     VFTContractIdSet,
     MinTokensToAddSet,
@@ -558,14 +635,24 @@ pub mod traits {
             &mut self,
             new_admin_address: ActorId,
         ) -> impl Call<Output = VftManagerEvents, Args = Self::Args>;
+        fn add_participant(
+            &mut self,
+            participant: ActorId,
+        ) -> impl Call<Output = VftManagerEvents, Args = Self::Args>;
         fn add_tokens_to_contract(
             &mut self,
             tokens_to_add: u128,
         ) -> impl Call<Output = VftManagerEvents, Args = Self::Args>;
+        fn add_transaction(
+            &mut self,
+            destination: ActorId,
+            value: u128,
+        ) -> impl Call<Output = U256, Args = Self::Args>;
         fn burn_tokens_from_contract(
             &mut self,
             tokens_to_burn: u128,
         ) -> impl Call<Output = VftManagerEvents, Args = Self::Args>;
+        fn distribution_pool_balance(&mut self) -> impl Call<Output = (), Args = Self::Args>;
         fn set_max_tokens_to_burn(
             &mut self,
             max_tokens_to_burn: u128,

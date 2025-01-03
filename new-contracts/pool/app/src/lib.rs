@@ -58,7 +58,6 @@ impl VFTManagerProgram {
             distribution_mode,
             access_type,
             participants,
-
             vft_contract_id,
             min_tokens_to_add,
             max_tokens_to_burn,

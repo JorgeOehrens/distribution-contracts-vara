@@ -1,5 +1,6 @@
 type VftManagerEvents = enum {
   NewAdminAdded: actor_id,
+  NewParticipant: actor_id,
   RefundOfVaras: u128,
   VFTContractIdSet,
   MinTokensToAddSet,
@@ -45,8 +46,11 @@ constructor {
 
 service VftManager {
   AddAdmin : (new_admin_address: actor_id) -> VftManagerEvents;
+  AddParticipant : (participant: actor_id) -> VftManagerEvents;
   AddTokensToContract : (tokens_to_add: u128) -> VftManagerEvents;
+  AddTransaction : (destination: actor_id, value: u128) -> u256;
   BurnTokensFromContract : (tokens_to_burn: u128) -> VftManagerEvents;
+  DistributionPoolBalance : () -> null;
   SetMaxTokensToBurn : (max_tokens_to_burn: u128) -> VftManagerEvents;
   SetMinTokensToAdd : (min_tokens_to_add: u128) -> VftManagerEvents;
   SetTokensPerVara : (tokens_per_vara: u128) -> VftManagerEvents;

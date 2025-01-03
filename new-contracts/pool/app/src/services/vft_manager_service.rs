@@ -5,8 +5,11 @@ use sails_rs::calls::{Call, Query};
 use sails_rs::{
     prelude::*,
     gstd::msg,
+    collections::{HashMap}
+
 };
 use gstd::exec;
+use crate::states::vft_manager_state::Transaction;
 
 // Import the struct state (VFTManagerState)
 use crate::states::vft_manager_state::VFTManagerState;
@@ -24,6 +27,7 @@ const ONE_TVARA: u128 = 1e12 as u128; // Value of one TVara and Vara (1_000_000_
 pub struct VFTManagerService<VftClient> {
     pub vft_client: VftClient
 }
+pub type TransactionId = U256;
 
 #[service]
 impl<VftClient> VFTManagerService<VftClient> // VFTManager service, with the extended-vft client
@@ -40,7 +44,9 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
         vft_contract_id: Option<ActorId>,
         min_tokens_to_add: u128,
         max_tokens_to_burn: u128,
-        tokens_per_vara: u128
+        tokens_per_vara: u128,
+        
+
     ) {
         unsafe {
             VFT_MANAGER_STATE = Some(
@@ -54,7 +60,11 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
                     vft_contract_id,
                     min_tokens_to_add,
                     max_tokens_to_burn,
-                    tokens_per_vara
+                    tokens_per_vara,
+                    transactions: HashMap::new(), // Inicializa como un nuevo mapa vacío
+
+                    transaction_count: U256::from(0), // Inicializa el contador en 0
+
                 }
             );
         };
@@ -68,7 +78,25 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
             vft_client
         }
     }
-
+    pub fn add_transaction(
+        &mut self,
+        destination: ActorId,
+        value: u128,
+    ) -> TransactionId {
+        let state = self.state_mut();
+    
+        let transaction_id = state.transaction_count;
+        let transaction = Transaction { // Usa el tipo correcto
+            destination,
+            value,
+            executed: false,
+        };
+    
+        state.transactions.insert(transaction_id, transaction); // Inserta en el estado
+        state.transaction_count += U256::from(1); // Incrementa el contador
+    
+        transaction_id
+    }
     // ## Add new a new admin
     // Only admins can add others admins
     pub fn add_admin(&mut self, new_admin_address: ActorId) -> VFTManagerEvents {
@@ -84,6 +112,44 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
         state.admins.push(new_admin_address);
 
         VFTManagerEvents::NewAdminAdded(new_admin_address)
+    }
+
+      
+    pub fn distribution_pool_balance(&mut self) {
+        let state = self.state_mut();
+        let _caller = msg::source();
+    
+        let participants: Vec<ActorId> = state.participants.iter().cloned().collect();
+    
+        if participants.is_empty() {
+            return;
+        }
+        let total_value = exec::value_available();
+
+        let distributable_value = total_value - 1;
+    
+        let value_per_participant = distributable_value / participants.len() as u128;
+    
+        // Verificar si el valor por participante es válido
+        if value_per_participant == 0 {
+            return;
+        }
+    
+        // Distribuir los tokens
+        for participant in participants {
+            let _transaction_id =state.add_transaction(
+                participant,
+                value_per_participant,
+            );
+        
+        }
+    
+    }
+
+    pub fn add_participant(&mut self, participant: ActorId) -> VFTManagerEvents {
+        let state = self.state_mut();
+        state.participants.push(participant);
+        VFTManagerEvents::NewParticipant(participant)
     }
 
     // ## Change vft contract id
@@ -599,6 +665,7 @@ pub enum VFTManagerQueryEvents {
 #[scale_info(crate = sails_rs::scale_info)]
 pub enum VFTManagerEvents {
     NewAdminAdded(ActorId),
+    NewParticipant(ActorId),
     RefundOfVaras(u128),
     VFTContractIdSet,
     MinTokensToAddSet,
