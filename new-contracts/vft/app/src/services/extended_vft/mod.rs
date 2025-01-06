@@ -1,6 +1,6 @@
 #![allow(static_mut_refs)]
 use gstd::msg;
-use sails_rs::{collections::HashSet, gstd::service, prelude::*};
+use sails_rs::{collections::{HashSet}, gstd::service, prelude::*};
 mod funcs;
 use crate::services;
 use vft_service::{Service as VftService, Storage};
@@ -13,6 +13,9 @@ pub struct ExtendedStorage {
 }
 
 static mut EXTENDED_STORAGE: Option<ExtendedStorage> = None;
+
+pub type SharesParticipant = U256;
+
 
 #[derive(Encode, Decode, TypeInfo)]
 #[codec(crate = sails_rs::scale_codec)]
@@ -27,7 +30,7 @@ pub struct ExtendedService {
 }
 
 impl ExtendedService {
-    pub fn seed(name: String, symbol: String, decimals: u8) -> Self {
+    pub fn seed(name: String, symbol: String, decimals: u8 ) -> Self {
         let admin = msg::source();
         unsafe {
             EXTENDED_STORAGE = Some(ExtendedStorage {
@@ -78,6 +81,29 @@ impl ExtendedService {
         }
         mutated
     }
+
+
+    pub fn distribute_shares(&mut self, shares_list: Vec<(ActorId, SharesParticipant)>) -> bool {
+        if !self.get().minters.contains(&msg::source()) {
+            panic!("Not allowed to mint");
+        }
+    
+        for (participant, shares) in shares_list {
+            // Realiza el mint para cada participante con su cantidad de shares
+            let mutated = services::utils::panicking(|| {
+                funcs::mint(Storage::balances(), Storage::total_supply(), participant, shares)
+            });
+            if mutated {
+                self.notify_on(Event::Minted { to: participant, value: shares })
+                    .expect("Notification Error");
+            }
+        }
+    
+        // Si todo se ejecuta correctamente, devolvemos true
+        true
+    }
+    
+
 
     pub fn burn(&mut self, from: ActorId, value: U256) -> bool {
         if !self.get().burners.contains(&msg::source()) {

@@ -14,7 +14,7 @@ sails-idl-gen = "=0.7.1"
 sails-client-gen = "=0.7.1"
 
 [dev-dependencies]
-extended-vft = { path = ".", features = ["wasm-binary"] }
+vft = { path = ".", features = ["wasm-binary"] }
 extended-vft-client = { path = "client" }
 sails-rs = { version = "=0.7.1", features = ["gtest"] }
 tokio = { version = "1.41", features = ["rt", "macros"] }

@@ -21,10 +21,16 @@ impl<R> ExtendedVftFactory<R> {
 
 impl<R: Remoting + Clone> traits::ExtendedVftFactory for ExtendedVftFactory<R> {
     type Args = R::Args;
-    fn new(&self, name: String, symbol: String, decimals: u8) -> impl Activation<Args = R::Args> {
+    fn new(
+        &self,
+        name: String,
+        symbol: String,
+        decimals: u8,
+        shares_list: Vec<(ActorId, U256)>,
+    ) -> impl Activation<Args = R::Args> {
         RemotingAction::<_, extended_vft_factory::io::New>::new(
             self.remoting.clone(),
-            (name, symbol, decimals),
+            (name, symbol, decimals, shares_list),
         )
     }
 }
@@ -38,14 +44,19 @@ pub mod extended_vft_factory {
 
         impl New {
             #[allow(dead_code)]
-            pub fn encode_call(name: String, symbol: String, decimals: u8) -> Vec<u8> {
-                <New as ActionIo>::encode_call(&(name, symbol, decimals))
+            pub fn encode_call(
+                name: String,
+                symbol: String,
+                decimals: u8,
+                shares_list: Vec<(ActorId, U256)>,
+            ) -> Vec<u8> {
+                <New as ActionIo>::encode_call(&(name, symbol, decimals, shares_list))
             }
         }
 
         impl ActionIo for New {
             const ROUTE: &'static [u8] = &[12, 78, 101, 119];
-            type Params = (String, String, u8);
+            type Params = (String, String, u8, Vec<(ActorId, U256)>);
             type Reply = ();
         }
     }
@@ -64,6 +75,12 @@ impl<R: Remoting + Clone> traits::Vft for Vft<R> {
     type Args = R::Args;
     fn burn(&mut self, from: ActorId, value: U256) -> impl Call<Output = bool, Args = R::Args> {
         RemotingAction::<_, vft::io::Burn>::new(self.remoting.clone(), (from, value))
+    }
+    fn distribute_shares(
+        &mut self,
+        shares_list: Vec<(ActorId, U256)>,
+    ) -> impl Call<Output = bool, Args = R::Args> {
+        RemotingAction::<_, vft::io::DistributeShares>::new(self.remoting.clone(), shares_list)
     }
     fn grant_admin_role(&mut self, to: ActorId) -> impl Call<Output = (), Args = R::Args> {
         RemotingAction::<_, vft::io::GrantAdminRole>::new(self.remoting.clone(), to)
@@ -155,6 +172,23 @@ pub mod vft {
         impl ActionIo for Burn {
             const ROUTE: &'static [u8] = &[12, 86, 102, 116, 16, 66, 117, 114, 110];
             type Params = (ActorId, U256);
+            type Reply = bool;
+        }
+        pub struct DistributeShares(());
+
+        impl DistributeShares {
+            #[allow(dead_code)]
+            pub fn encode_call(shares_list: Vec<(ActorId, U256)>) -> Vec<u8> {
+                <DistributeShares as ActionIo>::encode_call(&shares_list)
+            }
+        }
+
+        impl ActionIo for DistributeShares {
+            const ROUTE: &'static [u8] = &[
+                12, 86, 102, 116, 64, 68, 105, 115, 116, 114, 105, 98, 117, 116, 101, 83, 104, 97,
+                114, 101, 115,
+            ];
+            type Params = Vec<(ActorId, U256)>;
             type Reply = bool;
         }
         pub struct GrantAdminRole(());
@@ -508,6 +542,7 @@ pub mod traits {
             name: String,
             symbol: String,
             decimals: u8,
+            shares_list: Vec<(ActorId, U256)>,
         ) -> impl Activation<Args = Self::Args>;
     }
 
@@ -518,6 +553,10 @@ pub mod traits {
             &mut self,
             from: ActorId,
             value: U256,
+        ) -> impl Call<Output = bool, Args = Self::Args>;
+        fn distribute_shares(
+            &mut self,
+            shares_list: Vec<(ActorId, U256)>,
         ) -> impl Call<Output = bool, Args = Self::Args>;
         fn grant_admin_role(&mut self, to: ActorId) -> impl Call<Output = (), Args = Self::Args>;
         fn grant_burner_role(&mut self, to: ActorId) -> impl Call<Output = (), Args = Self::Args>;

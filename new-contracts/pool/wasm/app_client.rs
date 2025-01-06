@@ -176,11 +176,20 @@ impl<R: Remoting + Clone> traits::VftManager for VftManager<R> {
             tokens_to_burn,
         )
     }
+    fn distribution(&mut self) -> impl Call<Output = (), Args = R::Args> {
+        RemotingAction::<_, vft_manager::io::Distribution>::new(self.remoting.clone(), ())
+    }
     fn distribution_pool_balance(&mut self) -> impl Call<Output = (), Args = R::Args> {
         RemotingAction::<_, vft_manager::io::DistributionPoolBalance>::new(
             self.remoting.clone(),
             (),
         )
+    }
+    fn rewards_claimed(
+        &mut self,
+        address: ActorId,
+    ) -> impl Call<Output = VftManagerEvents, Args = R::Args> {
+        RemotingAction::<_, vft_manager::io::RewardsClaimed>::new(self.remoting.clone(), address)
     }
     fn set_max_tokens_to_burn(
         &mut self,
@@ -242,6 +251,20 @@ impl<R: Remoting + Clone> traits::VftManager for VftManager<R> {
             self.remoting.clone(),
             (),
         )
+    }
+    fn pending_rewards(
+        &self,
+        address: ActorId,
+    ) -> impl Query<Output = VftManagerQueryEvents, Args = R::Args> {
+        RemotingAction::<_, vft_manager::io::PendingRewards>::new(self.remoting.clone(), address)
+    }
+    fn pool_details(&self) -> impl Query<Output = VftManagerQueryEvents, Args = R::Args> {
+        RemotingAction::<_, vft_manager::io::PoolDetails>::new(self.remoting.clone(), ())
+    }
+    /// ## Returns the total number of tokens in the contract (In U256 format)
+    /// Additionally, it returns all transactions with their execution status.
+    fn rewards(&self) -> impl Query<Output = VftManagerQueryEvents, Args = R::Args> {
+        RemotingAction::<_, vft_manager::io::Rewards>::new(self.remoting.clone(), ())
     }
     /// ## get the amount of tokens to be able to change to one VARA
     fn tokens_to_swap_one_vara(
@@ -355,6 +378,23 @@ pub mod vft_manager {
             type Params = u128;
             type Reply = super::VftManagerEvents;
         }
+        pub struct Distribution(());
+
+        impl Distribution {
+            #[allow(dead_code)]
+            pub fn encode_call() -> Vec<u8> {
+                <Distribution as ActionIo>::encode_call(&())
+            }
+        }
+
+        impl ActionIo for Distribution {
+            const ROUTE: &'static [u8] = &[
+                40, 86, 102, 116, 77, 97, 110, 97, 103, 101, 114, 48, 68, 105, 115, 116, 114, 105,
+                98, 117, 116, 105, 111, 110,
+            ];
+            type Params = ();
+            type Reply = ();
+        }
         pub struct DistributionPoolBalance(());
 
         impl DistributionPoolBalance {
@@ -371,6 +411,23 @@ pub mod vft_manager {
             ];
             type Params = ();
             type Reply = ();
+        }
+        pub struct RewardsClaimed(());
+
+        impl RewardsClaimed {
+            #[allow(dead_code)]
+            pub fn encode_call(address: ActorId) -> Vec<u8> {
+                <RewardsClaimed as ActionIo>::encode_call(&address)
+            }
+        }
+
+        impl ActionIo for RewardsClaimed {
+            const ROUTE: &'static [u8] = &[
+                40, 86, 102, 116, 77, 97, 110, 97, 103, 101, 114, 56, 82, 101, 119, 97, 114, 100,
+                115, 67, 108, 97, 105, 109, 101, 100,
+            ];
+            type Params = ActorId;
+            type Reply = super::VftManagerEvents;
         }
         pub struct SetMaxTokensToBurn(());
 
@@ -491,6 +548,57 @@ pub mod vft_manager {
             type Params = ();
             type Reply = super::VftManagerQueryEvents;
         }
+        pub struct PendingRewards(());
+
+        impl PendingRewards {
+            #[allow(dead_code)]
+            pub fn encode_call(address: ActorId) -> Vec<u8> {
+                <PendingRewards as ActionIo>::encode_call(&address)
+            }
+        }
+
+        impl ActionIo for PendingRewards {
+            const ROUTE: &'static [u8] = &[
+                40, 86, 102, 116, 77, 97, 110, 97, 103, 101, 114, 56, 80, 101, 110, 100, 105, 110,
+                103, 82, 101, 119, 97, 114, 100, 115,
+            ];
+            type Params = ActorId;
+            type Reply = super::VftManagerQueryEvents;
+        }
+        pub struct PoolDetails(());
+
+        impl PoolDetails {
+            #[allow(dead_code)]
+            pub fn encode_call() -> Vec<u8> {
+                <PoolDetails as ActionIo>::encode_call(&())
+            }
+        }
+
+        impl ActionIo for PoolDetails {
+            const ROUTE: &'static [u8] = &[
+                40, 86, 102, 116, 77, 97, 110, 97, 103, 101, 114, 44, 80, 111, 111, 108, 68, 101,
+                116, 97, 105, 108, 115,
+            ];
+            type Params = ();
+            type Reply = super::VftManagerQueryEvents;
+        }
+        pub struct Rewards(());
+
+        impl Rewards {
+            #[allow(dead_code)]
+            pub fn encode_call() -> Vec<u8> {
+                <Rewards as ActionIo>::encode_call(&())
+            }
+        }
+
+        impl ActionIo for Rewards {
+            const ROUTE: &'static [u8] = &[
+                40, 86, 102, 116, 77, 97, 110, 97, 103, 101, 114, 28, 82, 101, 119, 97, 114, 100,
+                115,
+            ];
+            type Params = ();
+            type Reply = super::VftManagerQueryEvents;
+        }
         pub struct TokensToSwapOneVara(());
 
         impl TokensToSwapOneVara {
@@ -562,6 +670,9 @@ pub enum VftManagerEvents {
         total_tokens: u128,
         total_varas: u128,
     },
+    RewardsClaimed {
+        total_rewards: u128,
+    },
     Error(VftManagerErrors),
 }
 #[derive(PartialEq, Clone, Debug, Encode, Decode, TypeInfo)]
@@ -569,6 +680,8 @@ pub enum VftManagerEvents {
 #[scale_info(crate = sails_rs::scale_info)]
 pub enum VftManagerErrors {
     MinTokensToAdd(u128),
+    NoPendingRewards,
+    FailedToSendRewards,
     MaxTokensToBurn(u128),
     InsufficientTokens {
         total_contract_suply: u128,
@@ -597,6 +710,26 @@ pub enum VftManagerErrors {
 #[scale_info(crate = sails_rs::scale_info)]
 pub enum VftManagerQueryEvents {
     ContractBalanceInVaras(u128),
+    PoolDetails {
+        admins: Vec<ActorId>,
+        name: String,
+        type_pool: String,
+        distribution_mode: String,
+        access_type: String,
+        participants: Vec<ActorId>,
+        vft_contract_id: Option<ActorId>,
+        min_tokens_to_add: u128,
+        max_tokens_to_burn: u128,
+        tokens_per_vara: u128,
+        transaction_count: U256,
+        transactions: Vec<(U256, Transaction)>,
+    },
+    PendingRewards {
+        address: ActorId,
+        total_rewards: u128,
+        transactions: Vec<Transaction>,
+    },
+    Rewards(Vec<(U256, Transaction, bool)>),
     UserTotalTokensAsU128(u128),
     UserTotalTokens(U256),
     TotalTokensToSwap(U256),
@@ -604,6 +737,14 @@ pub enum VftManagerQueryEvents {
     TokensToSwapOneVara(u128),
     NumOfTokensForOneVara(u128),
     Error(VftManagerErrors),
+}
+#[derive(PartialEq, Clone, Debug, Encode, Decode, TypeInfo)]
+#[codec(crate = sails_rs::scale_codec)]
+#[scale_info(crate = sails_rs::scale_info)]
+pub struct Transaction {
+    pub destination: ActorId,
+    pub value: u128,
+    pub executed: bool,
 }
 
 pub mod traits {
@@ -652,7 +793,12 @@ pub mod traits {
             &mut self,
             tokens_to_burn: u128,
         ) -> impl Call<Output = VftManagerEvents, Args = Self::Args>;
+        fn distribution(&mut self) -> impl Call<Output = (), Args = Self::Args>;
         fn distribution_pool_balance(&mut self) -> impl Call<Output = (), Args = Self::Args>;
+        fn rewards_claimed(
+            &mut self,
+            address: ActorId,
+        ) -> impl Call<Output = VftManagerEvents, Args = Self::Args>;
         fn set_max_tokens_to_burn(
             &mut self,
             max_tokens_to_burn: u128,
@@ -679,6 +825,12 @@ pub mod traits {
         fn contract_total_varas_stored(
             &self,
         ) -> impl Query<Output = VftManagerQueryEvents, Args = Self::Args>;
+        fn pending_rewards(
+            &self,
+            address: ActorId,
+        ) -> impl Query<Output = VftManagerQueryEvents, Args = Self::Args>;
+        fn pool_details(&self) -> impl Query<Output = VftManagerQueryEvents, Args = Self::Args>;
+        fn rewards(&self) -> impl Query<Output = VftManagerQueryEvents, Args = Self::Args>;
         fn tokens_to_swap_one_vara(
             &self,
         ) -> impl Query<Output = VftManagerQueryEvents, Args = Self::Args>;

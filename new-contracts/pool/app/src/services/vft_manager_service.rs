@@ -145,7 +145,64 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
         }
     
     }
-
+    pub async fn distribution(&mut self) {
+        let state = self.state_mut();
+        let caller = msg::source();
+    
+        if !state.is_admin(&caller) {
+            panic!("Only admins can initiate distribution.");
+        }
+    
+        let participants = state.participants.clone();
+    
+        if participants.is_empty() {
+            panic!("No participants to distribute to.");
+        }
+    
+        // Verificar si el vft_contract_id está configurado
+        let vft_contract_id = match state.vft_contract_id {
+            Some(id) => id,
+            None => panic!("VFT contract ID is not set."),
+        };
+    
+        // Obtener el total disponible en la pool nativa (VARA)
+        let total_value = exec::value_available();
+        if total_value == 0 {
+            panic!("No VARA available for distribution.");
+        }
+    
+        // Acumular balances de participantes
+        let mut total_supply: U256 = U256::zero();
+        let mut balances: HashMap<ActorId, U256> = HashMap::new();
+    
+        for participant in participants.iter() {
+            let balance = self
+                .vft_client
+                .balance_of(*participant)
+                .recv(vft_contract_id)
+                .await
+                .expect("Failed to get participant balance");
+            
+            total_supply += balance;
+            balances.insert(*participant, balance);
+        }
+    
+        if total_supply.is_zero() {
+            panic!("Total supply is zero.");
+        }
+    
+        // Distribuir proporcionalmente
+        for (participant, balance) in balances {
+            let share = U256::from(total_value) * balance / total_supply;
+    
+            if share > U256::zero() {
+                // Registrar transacción
+                let transaction_id = state.add_transaction(participant, share.as_u128());
+    
+            }
+        }
+    }
+    
     pub fn add_participant(&mut self, participant: ActorId) -> VFTManagerEvents {
         let state = self.state_mut();
         state.participants.push(participant);
@@ -558,6 +615,80 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
 
         VFTManagerQueryEvents::TotalTokensToSwap(total_tokens_to_swap)
     }
+    /// ## Returns the total number of tokens in the contract (In U256 format)
+    /// Additionally, it returns all transactions with their execution status.
+    pub async fn rewards(&self) -> VFTManagerQueryEvents {
+        let state = self.state_ref();
+        // Obtener transacciones con su estado
+        let transactions: Vec<(TransactionId, Transaction, bool)> = state
+            .transactions
+            .iter()
+            .map(|(id, tx)| (*id, tx.clone(), tx.executed))
+            .collect();
+
+        VFTManagerQueryEvents::Rewards (
+            transactions
+        )
+    }
+    pub fn pending_rewards(&self, address: ActorId) -> VFTManagerQueryEvents {
+        let state = self.state_ref();
+    
+        // Filtrar transacciones no ejecutadas para el `address` proporcionado
+        let pending_transactions: Vec<Transaction> = state
+            .transactions
+            .values()
+            .filter(|tx| tx.destination == address && !tx.executed)
+            .cloned() // Clonar cada `Transaction` para recolectarlo como un `Transaction`
+            .collect();
+    
+        // Calcular el balance acumulado
+        let total_rewards: u128 = pending_transactions.iter().map(|tx| tx.value).sum();
+    
+        VFTManagerQueryEvents::PendingRewards {
+            address,
+            total_rewards,
+            transactions: pending_transactions,
+        }
+    }
+    pub fn rewards_claimed(&mut self, address: ActorId) -> VFTManagerEvents {
+        let state = self.state_mut();
+    
+        // Filtrar transacciones no ejecutadas para el `address` proporcionado
+        let pending_transactions: Vec<(TransactionId, u128)> = state
+            .transactions
+            .iter_mut()
+            .filter_map(|(id, tx)| {
+                if tx.destination == address && !tx.executed {
+                    // Devuelve el ID y el valor si la transacción es pendiente
+                    Some((*id, tx.value))
+                } else {
+                    None
+                }
+            })
+            .collect();
+    
+        // Calcular el balance acumulado
+        let total_rewards: u128 = pending_transactions.iter().map(|(_, value)| *value).sum();
+    
+        if total_rewards == 0 {
+            return VFTManagerEvents::Error(VFTManagerErrors::NoPendingRewards);
+        }
+    
+        // Realizar el envío de las recompensas
+        if let Err(_) = msg::send(address, VFTManagerEvents::RewardsClaimed { total_rewards }, total_rewards) {
+            return VFTManagerEvents::Error(VFTManagerErrors::FailedToSendRewards);
+        }
+    
+        // Marcar las transacciones como ejecutadas
+        for (id, _) in pending_transactions {
+            if let Some(tx) = state.transactions.get_mut(&id) {
+                tx.executed = true;
+            }
+        }
+    
+        VFTManagerEvents::RewardsClaimed { total_rewards }
+    }
+    
 
     /// ## Returns the total number of tokens in the contract (In u128 format)
     pub async fn total_tokens_to_swap_as_u128(&self) -> VFTManagerQueryEvents {
@@ -588,6 +719,32 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
     pub fn tokens_to_swap_one_vara(&self) -> VFTManagerQueryEvents {
         VFTManagerQueryEvents::TokensToSwapOneVara(self.state_ref().tokens_per_vara)
     }
+    pub fn pool_details(&self) -> VFTManagerQueryEvents {
+        let state = self.state_ref();
+    
+        let transactions: Vec<(TransactionId, Transaction)> = state
+            .transactions
+            .iter()
+            .map(|(id, tx)| (*id, tx.clone()))
+            .collect();
+    
+        VFTManagerQueryEvents::PoolDetails {
+            admins: state.admins.clone(),
+            name: state.name.clone(),
+            type_pool: state.type_pool.clone(),
+            distribution_mode: state.distribution_mode.clone(),
+            access_type: state.access_type.clone(),
+            participants: state.participants.clone(),
+            vft_contract_id: state.vft_contract_id,
+            min_tokens_to_add: state.min_tokens_to_add,
+            max_tokens_to_burn: state.max_tokens_to_burn,
+            tokens_per_vara: state.tokens_per_vara,
+            transaction_count: state.transaction_count,
+            transactions,
+        }
+    }
+    
+    
 
     /// ## Send an amount of tokens to the vft contract
     async fn add_num_of_tokens_to_contract(&mut self, tokens_to_add: u128, vft_contract_id: ActorId) -> Result<(), VFTManagerErrors> {
@@ -643,6 +800,9 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
         debug_assert!(state.is_none(), "state is not started!");
         unsafe { state.unwrap_unchecked() }
     }
+  
+    
+    
 }
 
 
@@ -651,6 +811,28 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
 #[scale_info(crate = sails_rs::scale_info)]
 pub enum VFTManagerQueryEvents {
     ContractBalanceInVaras(u128),
+    PoolDetails {
+        admins: Vec<ActorId>,
+        name: String,
+        type_pool: String,
+        distribution_mode: String,
+        access_type: String,
+        participants: Vec<ActorId>,
+        vft_contract_id: Option<ActorId>,
+        min_tokens_to_add: u128,
+        max_tokens_to_burn: u128,
+        tokens_per_vara: u128,
+        transaction_count: U256,
+        transactions: Vec<(TransactionId, Transaction)>,
+    },
+
+    PendingRewards {
+        address: ActorId,
+        total_rewards: u128,
+        transactions: Vec<Transaction>, // Las transacciones no ejecutadas del `address`
+    },
+    Rewards(Vec<(TransactionId, Transaction,bool)>),
+
     UserTotalTokensAsU128(u128),
     UserTotalTokens(U256),
     TotalTokensToSwap(U256),
@@ -678,6 +860,9 @@ pub enum VFTManagerEvents {
         total_tokens: u128,
         total_varas: u128
     },
+    RewardsClaimed {
+        total_rewards: u128,
+    },
     Error(VFTManagerErrors)
 }
 
@@ -686,6 +871,9 @@ pub enum VFTManagerEvents {
 #[scale_info(crate = sails_rs::scale_info)]
 pub enum VFTManagerErrors {
     MinTokensToAdd(u128),
+    NoPendingRewards,
+    FailedToSendRewards,
+
     MaxTokensToBurn(u128),
     InsufficientTokens {
         total_contract_suply: u128,

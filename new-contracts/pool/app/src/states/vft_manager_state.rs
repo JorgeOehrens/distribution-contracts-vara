@@ -40,7 +40,6 @@ pub struct VFTManagerState {
 #[codec(crate = sails_rs::scale_codec)]
 #[scale_info(crate = sails_rs::scale_info)]
 pub struct Transaction {
-
     pub destination: ActorId,
     pub value: u128,
     pub executed: bool,

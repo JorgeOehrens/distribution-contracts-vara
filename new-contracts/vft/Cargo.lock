@@ -1709,21 +1709,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "extended-vft"
-version = "1.1.0"
-dependencies = [
- "extended-vft",
- "extended-vft-app",
- "extended-vft-client",
- "gclient",
- "gear-core",
- "sails-client-gen",
- "sails-idl-gen",
- "sails-rs",
- "tokio",
-]
-
-[[package]]
 name = "extended-vft-app"
 version = "0.1.0"
 dependencies = [
@@ -7475,6 +7460,21 @@ name = "version_check"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
+
+[[package]]
+name = "vft"
+version = "1.1.0"
+dependencies = [
+ "extended-vft-app",
+ "extended-vft-client",
+ "gclient",
+ "gear-core",
+ "sails-client-gen",
+ "sails-idl-gen",
+ "sails-rs",
+ "tokio",
+ "vft",
+]
 
 [[package]]
 name = "vft-service"
