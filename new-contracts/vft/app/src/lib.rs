@@ -11,18 +11,8 @@ pub struct ExtendedVftProgram(());
 
 #[program]
 impl ExtendedVftProgram {
-    pub fn new(name: String, symbol: String, decimals: u8, shares_list: Vec<(ActorId, SharesParticipant)>) -> Self {
-        let mut service = ExtendedService::seed(name, symbol, decimals);
-        // Distribuimos los shares inmediatamente
-        for (participant, shares) in shares_list {
-            let result = service.mint(participant, shares);
-            if !result {
-                panic!(
-                    "Failed to mint shares for participant: {:?}, shares: {:?}",
-                    participant, shares
-                );
-            }
-        }
+    pub fn new(name: String, symbol: String, decimals: u8) -> Self {
+        let mut _service = ExtendedService::seed(name, symbol, decimals);
 
         Self(())
     }

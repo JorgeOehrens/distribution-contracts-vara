@@ -1,5 +1,5 @@
 constructor {
-  New : (name: str, symbol: str, decimals: u8, shares_list: vec struct { actor_id, u256 });
+  New : (name: str, symbol: str, decimals: u8);
 };
 
 service Vft {
