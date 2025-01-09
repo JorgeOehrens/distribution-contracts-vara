@@ -7472,6 +7472,8 @@ dependencies = [
  "sails-client-gen",
  "sails-idl-gen",
  "sails-rs",
+ "serde",
+ "serde_json",
  "tokio",
  "vft",
 ]
