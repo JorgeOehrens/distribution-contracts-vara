@@ -1,0 +1,51 @@
+type InitConfigFactory = struct {
+  code_id: code_id,
+  factory_admin_account: vec actor_id,
+  gas_for_program: u64,
+};
+
+type FactoryEvent = enum {
+  ProgramCreated: struct { id: u64, address: actor_id, init_config: InitConfig },
+  GasUpdatedSuccessfully: struct { updated_by: actor_id, new_gas_amount: u64 },
+  CodeIdUpdatedSuccessfully: struct { updated_by: actor_id, new_code_id: code_id },
+  AdminAdded: struct { updated_by: actor_id, admin_actor_id: actor_id },
+  RegistryRemoved: struct { removed_by: actor_id, program_for_id: u64 },
+};
+
+type InitConfig = struct {
+  name: str,
+};
+
+type FactoryError = enum {
+  ProgramInitializationFailed,
+  ProgramInitializationFailedWithContext: str,
+  Unauthorized,
+  UnexpectedFTEvent,
+  MessageSendError,
+  NotFound,
+  IdNotFoundInAddress,
+  IdNotFound,
+};
+
+type Record = struct {
+  name: str,
+};
+
+constructor {
+  New : (init: InitConfigFactory);
+};
+
+service Factory {
+  AddAdminToFactory : (admin_actor_id: actor_id) -> result (FactoryEvent, FactoryError);
+  CreateProgram : (init_config: InitConfig) -> result (FactoryEvent, FactoryError);
+  RemoveRegistry : (program_for_id: u64) -> result (FactoryEvent, FactoryError);
+  UpdateCodeId : (new_code_id: code_id) -> result (FactoryEvent, FactoryError);
+  UpdateGasForProgram : (new_gas_amount: u64) -> result (FactoryEvent, FactoryError);
+  query Admins : () -> vec actor_id;
+  query CodeId : () -> code_id;
+  query GasForProgram : () -> u64;
+  query IdToAddress : () -> vec struct { u64, actor_id };
+  query Number : () -> u64;
+  query Registry : () -> vec struct { actor_id, vec struct { u64, Record } };
+};
+
