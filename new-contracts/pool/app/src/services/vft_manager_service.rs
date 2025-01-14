@@ -197,7 +197,7 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
     
             if share > U256::zero() {
                 // Registrar transacción
-                let transaction_id = state.add_transaction(participant, share.as_u128());
+                let _transaction_id = state.add_transaction(participant, share.as_u128());
     
             }
         }

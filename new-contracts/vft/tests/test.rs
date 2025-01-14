@@ -25,6 +25,7 @@ async fn test_basic_function() {
     for i in 0..NUM_USERS {
         user_ids.push(11 + i as u64); 
     }
+
     let shares_list: Vec<(ActorId, SharesParticipant)> = user_ids
         .iter()
         .map(|user_id| ((*user_id).into(), sails_rs::U256::from(10))) 
@@ -59,7 +60,7 @@ async fn test_basic_function() {
     println!("VFT Client initialized.");
 
     client.distribute_shares(shares_list.clone())
-        .send_recv(extended_vft_id)
+        .send_recv(extended_vft_id) I 
         .await
         .unwrap();
     println!("Distribute Shares");
