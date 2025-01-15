@@ -72,7 +72,7 @@ impl Service {
     ) -> Result<ActorId, FactoryError> {
         let state = StateFactory::get_mut();
         let reply_deposit: u64 = 500_000; // Ajuste según tu necesidad
-
+        let admin = msg::source(); 
         let pool_payload = [
             "NewWithData".encode(),
             init_config.name.encode(),
@@ -80,7 +80,9 @@ impl Service {
             init_config.distribution_mode.encode(),
             init_config.access_type.encode(),
             init_config.participants.encode(),
-            Some(vft_address).encode()
+            Some(vft_address).encode(),
+            vec![admin].encode(),  
+
         ]
         .concat();
 
