@@ -148,6 +148,9 @@ impl<R: Remoting + Clone> traits::VftManager for VftManager<R> {
             (destination, value),
         )
     }
+    fn add_vara(&mut self) -> impl Call<Output = VftManagerEvents, Args = R::Args> {
+        RemotingAction::<_, vft_manager::io::AddVara>::new(self.remoting.clone(), ())
+    }
     fn distribution(&mut self) -> impl Call<Output = (), Args = R::Args> {
         RemotingAction::<_, vft_manager::io::Distribution>::new(self.remoting.clone(), ())
     }
@@ -244,6 +247,22 @@ pub mod vft_manager {
             ];
             type Params = (ActorId, u128);
             type Reply = U256;
+        }
+        pub struct AddVara(());
+
+        impl AddVara {
+            #[allow(dead_code)]
+            pub fn encode_call() -> Vec<u8> {
+                <AddVara as ActionIo>::encode_call(&())
+            }
+        }
+
+        impl ActionIo for AddVara {
+            const ROUTE: &'static [u8] = &[
+                40, 86, 102, 116, 77, 97, 110, 97, 103, 101, 114, 28, 65, 100, 100, 86, 97, 114, 97,
+            ];
+            type Params = ();
+            type Reply = super::VftManagerEvents;
         }
         pub struct Distribution(());
 
@@ -372,6 +391,7 @@ pub mod vft_manager {
 pub enum VftManagerEvents {
     NewAdminAdded(ActorId),
     NewParticipant(ActorId),
+    AddVara,
     RefundOfVaras(u128),
     VFTContractIdSet,
     MinTokensToAddSet,
@@ -494,6 +514,7 @@ pub mod traits {
             destination: ActorId,
             value: u128,
         ) -> impl Call<Output = U256, Args = Self::Args>;
+        fn add_vara(&mut self) -> impl Call<Output = VftManagerEvents, Args = Self::Args>;
         fn distribution(&mut self) -> impl Call<Output = (), Args = Self::Args>;
         fn distribution_pool_balance(&mut self) -> impl Call<Output = (), Args = Self::Args>;
         fn rewards_claimed(

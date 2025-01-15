@@ -149,11 +149,7 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
     pub async fn distribution(&mut self) {
         let state = self.state_mut();
         let caller = msg::source();
-    
-        if !state.is_admin(&caller) {
-            panic!("Only admins can initiate distribution.");
-        }
-    
+
         let participants = state.participants.clone();
     
         if participants.is_empty() {
@@ -208,6 +204,13 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
         let state = self.state_mut();
         state.participants.push(participant);
         VFTManagerEvents::NewParticipant(participant)
+    }
+
+    pub fn add_vara(&mut self) -> VFTManagerEvents {
+        let state = self.state_mut();
+
+        VFTManagerEvents::AddVara()
+
     }
 
     // ## Change vft contract id
@@ -385,6 +388,8 @@ pub enum VFTManagerQueryEvents {
 pub enum VFTManagerEvents {
     NewAdminAdded(ActorId),
     NewParticipant(ActorId),
+    AddVara(),
+
     RefundOfVaras(u128),
     VFTContractIdSet,
     MinTokensToAddSet,

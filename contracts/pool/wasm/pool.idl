@@ -1,6 +1,7 @@
 type VftManagerEvents = enum {
   NewAdminAdded: actor_id,
   NewParticipant: actor_id,
+  AddVara,
   RefundOfVaras: u128,
   VFTContractIdSet,
   MinTokensToAddSet,
@@ -60,6 +61,7 @@ service VftManager {
   AddAdmin : (new_admin_address: actor_id) -> VftManagerEvents;
   AddParticipant : (participant: actor_id) -> VftManagerEvents;
   AddTransaction : (destination: actor_id, value: u128) -> u256;
+  AddVara : () -> VftManagerEvents;
   Distribution : () -> null;
   DistributionPoolBalance : () -> null;
   RewardsClaimed : (address: actor_id) -> VftManagerEvents;
