@@ -1,5 +1,6 @@
 #![allow(static_mut_refs)] // Only to avoid the static variable mut reference warning
 
+
 // Necesary imports
 use sails_rs::calls::{ Query};
 use sails_rs::{
@@ -35,14 +36,16 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
 {
     // Related function "seed", it will initiate the Service state. IMPORTANT: only call once
     pub fn seed(
-        admin: ActorId,
+        _admin: ActorId,
         name: String,
         type_pool: String,
         distribution_mode: String,
         access_type: String,
         participants: Vec<ActorId>,
         vft_contract_id: Option<ActorId>,
-        mut admins: Vec<ActorId>
+        mut admins: Vec<ActorId>,
+         last_distribution_time: u64, // Última distribución realizada
+         is_manual: bool,        
 
         
 
@@ -65,7 +68,9 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
                     participants,
                     vft_contract_id,
                     transactions: HashMap::new(), // Inicializa como un nuevo mapa vacío
-                    transaction_count: U256::from(0) // Inicializa el contador en 0
+                    transaction_count: U256::from(0), // Inicializa el contador en 0
+                    last_distribution_time,
+                    is_manual
                 }
             );
         };
@@ -116,7 +121,7 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
     }
 
       
-    pub fn distribution_pool_balance(&mut self) {
+    fn distribution_pool_balance(&mut self) {
         let state = self.state_mut();
         let _caller = msg::source();
     
@@ -146,9 +151,26 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
         }
     
     }
-    pub async fn distribution(&mut self) {
+    
+    
+
+
+    pub fn set_manual_mode(&mut self, manual: bool) {
         let state = self.state_mut();
+        state.is_manual = manual;
+    }
+
+
+    pub async fn distribution(&mut self, manual: bool) {
+        let _time_now: u64 = exec::block_timestamp();
         let caller = msg::source();
+
+        // Get state once and reuse it
+        let state = self.state_mut();
+     
+        if state.is_manual && !manual {
+            panic!("Distribution is in manual mode");
+        }
 
         let participants = state.participants.clone();
     
@@ -207,7 +229,7 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
     }
 
     pub fn add_vara(&mut self) -> VFTManagerEvents {
-        let state = self.state_mut();
+        let _state = self.state_mut();
 
         VFTManagerEvents::AddVara()
 
@@ -325,6 +347,8 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
             vft_contract_id: state.vft_contract_id,
             transaction_count: state.transaction_count,
             transactions,
+            last_distribution_time: state.last_distribution_time, // Última distribución realizada
+            is_manual: state.is_manual,       
         }
     }
     
@@ -364,6 +388,8 @@ pub enum VFTManagerQueryEvents {
         vft_contract_id: Option<ActorId>,
         transaction_count: U256,
         transactions: Vec<(TransactionId, Transaction)>,
+        last_distribution_time: u64, // Última distribución realizada
+        is_manual: bool,       
     },
 
     PendingRewards {

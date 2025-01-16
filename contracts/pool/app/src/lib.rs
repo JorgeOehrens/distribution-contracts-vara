@@ -33,6 +33,8 @@ impl VFTManagerProgram {
             Vec::new(),
             None,
             Vec::new(),
+            0,
+            true
 
         );
 
@@ -46,8 +48,9 @@ impl VFTManagerProgram {
         access_type : String,
         participants: Vec<ActorId>,
         vft_contract_id: Option<ActorId>,
-        admins: Vec<ActorId>
-
+        admins: Vec<ActorId>,
+        last_distribution_time: u64, // Última distribución realizada
+        is_manual: bool,        
     ) -> Self {
         VFTManagerService::<VftClient<GStdRemoting>>::seed(
             msg::source(), 
@@ -57,11 +60,15 @@ impl VFTManagerProgram {
             access_type,
             participants,
             vft_contract_id,
-            admins
+            admins,
+            last_distribution_time,
+            is_manual     
+
         );
 
         Self
     }
+   
 
     #[route("VFTManager")]
     pub fn vft_manager_svc(&self) -> VFTManagerService<VftClient<GStdRemoting>> {

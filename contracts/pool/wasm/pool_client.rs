@@ -33,6 +33,8 @@ impl<R: Remoting + Clone> traits::PoolFactory for PoolFactory<R> {
         participants: Vec<ActorId>,
         vft_contract_id: Option<ActorId>,
         admins: Vec<ActorId>,
+        last_distribution_time: u64,
+        is_manual: bool,
     ) -> impl Activation<Args = R::Args> {
         RemotingAction::<_, pool_factory::io::NewWithData>::new(
             self.remoting.clone(),
@@ -44,6 +46,8 @@ impl<R: Remoting + Clone> traits::PoolFactory for PoolFactory<R> {
                 participants,
                 vft_contract_id,
                 admins,
+                last_distribution_time,
+                is_manual,
             ),
         )
     }
@@ -80,6 +84,8 @@ pub mod pool_factory {
                 participants: Vec<ActorId>,
                 vft_contract_id: Option<ActorId>,
                 admins: Vec<ActorId>,
+                last_distribution_time: u64,
+                is_manual: bool,
             ) -> Vec<u8> {
                 <NewWithData as ActionIo>::encode_call(&(
                     name,
@@ -89,6 +95,8 @@ pub mod pool_factory {
                     participants,
                     vft_contract_id,
                     admins,
+                    last_distribution_time,
+                    is_manual,
                 ))
             }
         }
@@ -103,6 +111,8 @@ pub mod pool_factory {
                 Vec<ActorId>,
                 Option<ActorId>,
                 Vec<ActorId>,
+                u64,
+                bool,
             );
             type Reply = ();
         }
@@ -151,20 +161,17 @@ impl<R: Remoting + Clone> traits::VftManager for VftManager<R> {
     fn add_vara(&mut self) -> impl Call<Output = VftManagerEvents, Args = R::Args> {
         RemotingAction::<_, vft_manager::io::AddVara>::new(self.remoting.clone(), ())
     }
-    fn distribution(&mut self) -> impl Call<Output = (), Args = R::Args> {
-        RemotingAction::<_, vft_manager::io::Distribution>::new(self.remoting.clone(), ())
-    }
-    fn distribution_pool_balance(&mut self) -> impl Call<Output = (), Args = R::Args> {
-        RemotingAction::<_, vft_manager::io::DistributionPoolBalance>::new(
-            self.remoting.clone(),
-            (),
-        )
+    fn distribution(&mut self, manual: bool) -> impl Call<Output = (), Args = R::Args> {
+        RemotingAction::<_, vft_manager::io::Distribution>::new(self.remoting.clone(), manual)
     }
     fn rewards_claimed(
         &mut self,
         address: ActorId,
     ) -> impl Call<Output = VftManagerEvents, Args = R::Args> {
         RemotingAction::<_, vft_manager::io::RewardsClaimed>::new(self.remoting.clone(), address)
+    }
+    fn set_manual_mode(&mut self, manual: bool) -> impl Call<Output = (), Args = R::Args> {
+        RemotingAction::<_, vft_manager::io::SetManualMode>::new(self.remoting.clone(), manual)
     }
     fn set_vft_contract_id(
         &mut self,
@@ -268,8 +275,8 @@ pub mod vft_manager {
 
         impl Distribution {
             #[allow(dead_code)]
-            pub fn encode_call() -> Vec<u8> {
-                <Distribution as ActionIo>::encode_call(&())
+            pub fn encode_call(manual: bool) -> Vec<u8> {
+                <Distribution as ActionIo>::encode_call(&manual)
             }
         }
 
@@ -278,24 +285,7 @@ pub mod vft_manager {
                 40, 86, 102, 116, 77, 97, 110, 97, 103, 101, 114, 48, 68, 105, 115, 116, 114, 105,
                 98, 117, 116, 105, 111, 110,
             ];
-            type Params = ();
-            type Reply = ();
-        }
-        pub struct DistributionPoolBalance(());
-
-        impl DistributionPoolBalance {
-            #[allow(dead_code)]
-            pub fn encode_call() -> Vec<u8> {
-                <DistributionPoolBalance as ActionIo>::encode_call(&())
-            }
-        }
-
-        impl ActionIo for DistributionPoolBalance {
-            const ROUTE: &'static [u8] = &[
-                40, 86, 102, 116, 77, 97, 110, 97, 103, 101, 114, 92, 68, 105, 115, 116, 114, 105,
-                98, 117, 116, 105, 111, 110, 80, 111, 111, 108, 66, 97, 108, 97, 110, 99, 101,
-            ];
-            type Params = ();
+            type Params = bool;
             type Reply = ();
         }
         pub struct RewardsClaimed(());
@@ -314,6 +304,23 @@ pub mod vft_manager {
             ];
             type Params = ActorId;
             type Reply = super::VftManagerEvents;
+        }
+        pub struct SetManualMode(());
+
+        impl SetManualMode {
+            #[allow(dead_code)]
+            pub fn encode_call(manual: bool) -> Vec<u8> {
+                <SetManualMode as ActionIo>::encode_call(&manual)
+            }
+        }
+
+        impl ActionIo for SetManualMode {
+            const ROUTE: &'static [u8] = &[
+                40, 86, 102, 116, 77, 97, 110, 97, 103, 101, 114, 52, 83, 101, 116, 77, 97, 110,
+                117, 97, 108, 77, 111, 100, 101,
+            ];
+            type Params = bool;
+            type Reply = ();
         }
         pub struct SetVftContractId(());
 
@@ -454,6 +461,8 @@ pub enum VftManagerQueryEvents {
         vft_contract_id: Option<ActorId>,
         transaction_count: U256,
         transactions: Vec<(U256, Transaction)>,
+        last_distribution_time: u64,
+        is_manual: bool,
     },
     PendingRewards {
         address: ActorId,
@@ -495,6 +504,8 @@ pub mod traits {
             participants: Vec<ActorId>,
             vft_contract_id: Option<ActorId>,
             admins: Vec<ActorId>,
+            last_distribution_time: u64,
+            is_manual: bool,
         ) -> impl Activation<Args = Self::Args>;
     }
 
@@ -515,12 +526,12 @@ pub mod traits {
             value: u128,
         ) -> impl Call<Output = U256, Args = Self::Args>;
         fn add_vara(&mut self) -> impl Call<Output = VftManagerEvents, Args = Self::Args>;
-        fn distribution(&mut self) -> impl Call<Output = (), Args = Self::Args>;
-        fn distribution_pool_balance(&mut self) -> impl Call<Output = (), Args = Self::Args>;
+        fn distribution(&mut self, manual: bool) -> impl Call<Output = (), Args = Self::Args>;
         fn rewards_claimed(
             &mut self,
             address: ActorId,
         ) -> impl Call<Output = VftManagerEvents, Args = Self::Args>;
+        fn set_manual_mode(&mut self, manual: bool) -> impl Call<Output = (), Args = Self::Args>;
         fn set_vft_contract_id(
             &mut self,
             vft_contract_id: ActorId,

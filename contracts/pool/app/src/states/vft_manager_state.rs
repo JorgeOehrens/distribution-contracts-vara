@@ -23,10 +23,10 @@ pub struct VFTManagerState {
     pub participants: Vec<ActorId>,
     // contract id from the extended vft contract
     pub vft_contract_id: Option<ActorId>,
-
-
     pub transactions: HashMap<TransactionId, Transaction>,
     pub transaction_count: U256,
+    pub last_distribution_time: u64, // Última distribución realizada
+    pub is_manual: bool,     
 
 
 }
