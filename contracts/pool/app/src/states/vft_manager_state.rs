@@ -26,7 +26,9 @@ pub struct VFTManagerState {
     pub transactions: HashMap<TransactionId, Transaction>,
     pub transaction_count: U256,
     pub last_distribution_time: u64, // Última distribución realizada
-    pub is_manual: bool,     
+    pub is_manual: bool,
+    pub period: u64,
+    pub interval: u64
 
 
 }

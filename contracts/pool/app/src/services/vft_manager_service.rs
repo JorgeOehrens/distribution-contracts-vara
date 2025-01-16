@@ -45,7 +45,10 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
         vft_contract_id: Option<ActorId>,
         mut admins: Vec<ActorId>,
          last_distribution_time: u64, // Última distribución realizada
-         is_manual: bool,        
+         is_manual: bool,    
+         period : u64,
+         interval: u64
+
 
         
 
@@ -70,7 +73,9 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
                     transactions: HashMap::new(), // Inicializa como un nuevo mapa vacío
                     transaction_count: U256::from(0), // Inicializa el contador en 0
                     last_distribution_time,
-                    is_manual
+                    is_manual,
+                    period,
+                    interval
                 }
             );
         };
@@ -160,20 +165,53 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
         state.is_manual = manual;
     }
 
-
     pub async fn distribution(&mut self, manual: bool) {
-        let _time_now: u64 = exec::block_timestamp();
+        let time_now: u64 = exec::block_timestamp();
         let caller = msg::source();
-
-        // Get state once and reuse it
-        let state = self.state_mut();
-     
-        if state.is_manual && !manual {
-            panic!("Distribution is in manual mode");
-        }
-
-        let participants = state.participants.clone();
     
+        // Obtener el estado
+        let state = self.state_mut();
+    
+        // Validar el modo manual
+        if state.is_manual && manual && !state.is_admin(&caller) {
+            panic!("Only admins can trigger manual distribution");
+        }
+    
+        // Si no es manual, validar el tiempo
+        if !manual {
+            let base_interval = match state.period {
+                1 => 60 * 1000,                    // 1 minuto en milisegundos
+                2 => 60 * 60 * 1000,               // 1 hora en milisegundos
+                3 => 30 * 24 * 60 * 60 * 1000,     // 1 mes (30 días) en milisegundos
+                4 => 180 * 24 * 60 * 60 * 1000,    // Semestral: 6 meses en milisegundos
+                5 => 365 * 24 * 60 * 60 * 1000,    // Anual: 12 meses en milisegundos
+                _ => panic!("Invalid period value"), // Controla valores no válidos
+            };
+    
+            let required_interval = base_interval * state.interval;
+    
+            if time_now < state.last_distribution_time + required_interval {
+                let remaining_time = state.last_distribution_time + required_interval - time_now;
+    
+                // Convertir el tiempo restante en un formato más amigable
+                let remaining_time_formatted = if remaining_time < 60 * 1000 {
+                    format!("{} seconds", remaining_time / 1000) // Para segundos
+                } else if remaining_time < 60 * 60 * 1000 {
+                    format!("{} minutes", remaining_time / (60 * 1000)) // Para minutos
+                } else if remaining_time < 24 * 60 * 60 * 1000 {
+                    format!("{} hours", remaining_time / (60 * 60 * 1000)) // Para horas
+                } else {
+                    format!("{} days", remaining_time / (24 * 60 * 60 * 1000)) // Para días
+                };
+    
+                panic!(
+                    "Distribution cannot be executed yet. {} remaining until next distribution.",
+                    remaining_time_formatted
+                );
+            }
+        }
+    
+        let participants = state.participants.clone();
         if participants.is_empty() {
             panic!("No participants to distribute to.");
         }
@@ -217,10 +255,16 @@ where VftClient: Vft // We specify the type of the generic type (The client) to 
             if share > U256::zero() {
                 // Registrar transacción
                 let _transaction_id = state.add_transaction(participant, share.as_u128());
-    
             }
         }
+    
+        // Actualizar el tiempo de la última distribución solo si no es manual
+        if !manual {
+            state.last_distribution_time = time_now;
+        }
     }
+    
+    
     
     pub fn add_participant(&mut self, participant: ActorId) -> VFTManagerEvents {
         let state = self.state_mut();

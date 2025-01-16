@@ -34,7 +34,9 @@ impl VFTManagerProgram {
             None,
             Vec::new(),
             0,
-            true
+            true,
+            0,
+            0
 
         );
 
@@ -50,7 +52,9 @@ impl VFTManagerProgram {
         vft_contract_id: Option<ActorId>,
         admins: Vec<ActorId>,
         last_distribution_time: u64, // Última distribución realizada
-        is_manual: bool,        
+        is_manual: bool,
+        period: u64,
+        interval: u64 //Interval for x perdio (minutes, hours , anual)
     ) -> Self {
         VFTManagerService::<VftClient<GStdRemoting>>::seed(
             msg::source(), 
@@ -62,8 +66,9 @@ impl VFTManagerProgram {
             vft_contract_id,
             admins,
             last_distribution_time,
-            is_manual     
-
+            is_manual,
+            period,
+            interval
         );
 
         Self

@@ -35,6 +35,8 @@ impl<R: Remoting + Clone> traits::PoolFactory for PoolFactory<R> {
         admins: Vec<ActorId>,
         last_distribution_time: u64,
         is_manual: bool,
+        period: u64,
+        interval: u64,
     ) -> impl Activation<Args = R::Args> {
         RemotingAction::<_, pool_factory::io::NewWithData>::new(
             self.remoting.clone(),
@@ -48,6 +50,8 @@ impl<R: Remoting + Clone> traits::PoolFactory for PoolFactory<R> {
                 admins,
                 last_distribution_time,
                 is_manual,
+                period,
+                interval,
             ),
         )
     }
@@ -86,6 +90,8 @@ pub mod pool_factory {
                 admins: Vec<ActorId>,
                 last_distribution_time: u64,
                 is_manual: bool,
+                period: u64,
+                interval: u64,
             ) -> Vec<u8> {
                 <NewWithData as ActionIo>::encode_call(&(
                     name,
@@ -97,6 +103,8 @@ pub mod pool_factory {
                     admins,
                     last_distribution_time,
                     is_manual,
+                    period,
+                    interval,
                 ))
             }
         }
@@ -113,6 +121,8 @@ pub mod pool_factory {
                 Vec<ActorId>,
                 u64,
                 bool,
+                u64,
+                u64,
             );
             type Reply = ();
         }
@@ -506,6 +516,8 @@ pub mod traits {
             admins: Vec<ActorId>,
             last_distribution_time: u64,
             is_manual: bool,
+            period: u64,
+            interval: u64,
         ) -> impl Activation<Args = Self::Args>;
     }
 

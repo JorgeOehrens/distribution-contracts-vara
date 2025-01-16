@@ -54,7 +54,7 @@ type Transaction = struct {
 
 constructor {
   New : ();
-  NewWithData : (name: str, type_pool: str, distribution_mode: str, access_type: str, participants: vec actor_id, vft_contract_id: opt actor_id, admins: vec actor_id, last_distribution_time: u64, is_manual: bool);
+  NewWithData : (name: str, type_pool: str, distribution_mode: str, access_type: str, participants: vec actor_id, vft_contract_id: opt actor_id, admins: vec actor_id, last_distribution_time: u64, is_manual: bool, period: u64, interval: u64);
 };
 
 service VftManager {
