@@ -8,7 +8,7 @@ license.workspace = true
 gstd.workspace = true
 sails-rs.workspace = true
 
+
 [dev-dependencies]
-application_builder = { path = "../wasm" }
 tokio.workspace = true
 sails-rs = { workspace = true, features = ["gtest"] }

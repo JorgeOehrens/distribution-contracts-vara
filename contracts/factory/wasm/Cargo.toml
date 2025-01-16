@@ -1,5 +1,5 @@
 [package]
-name = "application_builder"
+name = "wasm"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,7 +8,7 @@ license.workspace = true
 app = { path = "../app" }
 
 [build-dependencies]
-sails-idl-gen.workspace = true
-sails-client-gen.workspace = true
 sails-rs = { workspace = true, features = ["wasm-builder"] }
+sails-client-gen.workspace = true
+sails-idl-gen.workspace = true
 app = { path = "../app" }

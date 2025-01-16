@@ -1,24 +1,23 @@
-[package]
-name = "pool"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
+[workspace]
+resolver = "2"
 
-[dependencies]
-pool-app = { path = "app" }
+members = [
+    "app", "wasm"
+]
 
-[build-dependencies]
-pool-app = { path = "app" }
-sails-rs = { workspace = true, features = ["wasm-builder"] }
-sails-idl-gen.workspace = true
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0"
 
-[dev-dependencies]
-pool = { path = ".", features = ["wasm-binary"] }
-pool-client = { path = "client" }
-sails-rs = { workspace = true, features = ["gtest"] }
-tokio = { workspace = true, features = ["rt", "macros"] }
-gtest.workspace = true
-gmeta.workspace = true
-
-[features]
-wasm-binary = []
+[workspace.dependencies]
+gstd = "=1.7.0"
+sails-client-gen = "=0.7.1"
+sails-idl-gen = "=0.7.1"
+sails-rs = "=0.7.1"
+tokio = { version = "1.41", features = ["rt", "macros"] }
+gclient = "=1.7.0"
+gear-core = "=1.7.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+application_builder = { path = "wasm" }
