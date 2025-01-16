@@ -436,6 +436,10 @@ pub struct InitConfig {
     pub distribution_mode: String,
     pub access_type: String,
     pub participants: Vec<ActorId>,
+    pub last_distribution_time: u64,
+    pub is_manual: bool,
+    pub period: u64,
+    pub interval: u64,
 }
 #[derive(PartialEq, Debug, Encode, Decode, TypeInfo)]
 #[codec(crate = sails_rs::scale_codec)]

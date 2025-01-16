@@ -81,7 +81,12 @@ impl Service {
             init_config.access_type.encode(),
             init_config.participants.encode(),
             Some(vft_address).encode(),
-            vec![admin].encode(),  
+            vec![admin].encode(),
+            init_config.last_distribution_time.encode(),
+            init_config.is_manual.encode(),
+            init_config.period.encode(),
+            init_config.interval.encode(),
+
 
         ]
         .concat();

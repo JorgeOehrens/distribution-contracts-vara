@@ -21,6 +21,10 @@ type InitConfig = struct {
   distribution_mode: str,
   access_type: str,
   participants: vec actor_id,
+  last_distribution_time: u64,
+  is_manual: bool,
+  period: u64,
+  interval: u64,
 };
 
 type FactoryError = enum {
