@@ -50,7 +50,7 @@ async fn test_basic_function() {
     println!("Extended VFT Factory initialized.");
 
     let extended_vft_id = extended_vft_factory
-        .new("Dob".to_string(), "DB".to_string(), 18)
+        .new("Dob".to_string(), "DB".to_string(), 18, vec![ADMIN_ID.into()])
         .send_recv(code_id, "123")
         .await
         .unwrap();
@@ -58,6 +58,12 @@ async fn test_basic_function() {
 
     let mut client = VftClient::new(program_space);
     println!("VFT Client initialized.");
+
+    client.grant_admin_role(ADMIN_ID.into())
+        .send_recv(extended_vft_id)
+        .await
+        .unwrap();
+    println!("Granted admin role to ADMIN_ID");
 
     client.distribute_shares(shares_list.clone())
         .send_recv(extended_vft_id)
