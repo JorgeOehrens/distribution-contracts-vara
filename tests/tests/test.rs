@@ -56,12 +56,21 @@ async fn test_basic_function() {
     let extended_vft_factory = Factory::new(program_space.clone());
     println!("Extended VFT Factory initialized.");
 
+    
+    let extended_pool_factory = Factory::new(program_space.clone());
+    println!("Extended POOL Factory initialized.");
+
     let extended_vft_id = extended_vft_factory
         .new("Dob".to_string(), "DB".to_string(), 18, vec![ADMIN_ID.into()])
         .send_recv(code_id, "123")
         .await
         .unwrap();
     println!("Extended VFT created with ID: {:?}", extended_vft_id);
+
+    let extended_pool_id = extended_pool_factory.new()
+    .send_recv(code_id, "123")
+    .await
+    .unwrap();
 
     let mut client = VftClient::new(program_space);
     println!("VFT Client initialized.");

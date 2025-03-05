@@ -43,5 +43,6 @@ cargo +nightly build --release
 ## **Testing the WASM File**
 
 ```bash
+cd tests
 cargo test
 ```
