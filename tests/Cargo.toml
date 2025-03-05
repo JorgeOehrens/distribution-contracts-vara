@@ -1,0 +1,27 @@
+[package]
+name = "vft"
+version = "1.1.0"
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+extended-vft-app = { path = "app" }
+
+[build-dependencies]
+extended-vft-app = { path = "app" }
+sails-rs = { version = "=0.7.1", features = ["wasm-builder"] }
+sails-idl-gen = "=0.7.1"
+sails-client-gen = "=0.7.1"
+
+[dev-dependencies]
+vft = { path = ".", features = ["wasm-binary"] }
+extended-vft-client = { path = "client" }
+sails-rs = { version = "=0.7.1", features = ["gtest"] }
+tokio = { version = "1.41", features = ["rt", "macros"] }
+gclient = "=1.7.0"
+gear-core = "=1.7.0"    
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+
+[features]
+wasm-binary = []
