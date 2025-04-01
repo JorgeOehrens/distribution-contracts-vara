@@ -1,48 +1,92 @@
-# **Dob-SC**
+# Distribution Contracts on Vara Network
 
-Dob-SC is a project designed for [brief description of the project's purpose].
+Este repositorio contiene contratos inteligentes para la distribución de tokens en la red **Vara** usando **Gear Protocol**.
+
+## 🚀 Requisitos
+
+- Rust + Nightly
+- Cargo
+- Cuenta en [Supabase](https://supabase.com/)
+- Acceso a [Gear Idea](https://idea.gear-tech.io/)
 
 ---
 
-## **Prerequisites**
+## 🧱 Instalación
 
-Ensure you have the following tools installed before starting:
-
-1. **Xcode**  
-   - Download and install Xcode from: [Apple Developer](https://developer.apple.com/xcode/).
-
-2. **Rust and Rustup**  
-   - Install Rust and its version manager: [rustup.rs](https://rustup.rs/).
-
-3. **WASM Target**  
-   - Add the `wasm32-unknown-unknown` target:  
-     Refer to the official documentation: [Rustup Toolchains](https://rust-lang.github.io/rustup/concepts/toolchains.html#toolchain-specification).
-
-4. **cargo-script**  
-   - Install cargo-script: [cargo-script](https://github.com/DanielKeep/cargo-script).
----
-
-
-
-
-## **Building the WASM File**
-
-Run the following command to build the project in its optimized release mode:
+1. Clonar este repositorio:
 
 ```bash
-cd build
-cargo script deploy.rs
+git clone https://github.com/JorgeOehrens/distribution-contracts-vara.git
+cd distribution-contracts-vara
 ```
+
+2. Ir a la carpeta del contrato que deseas compilar:
+
 ```bash
-cd contracts 
-cd <name contract>
+cd contracts/<nombre_contrato>
 cargo +nightly build --release
 ```
 
+---
 
-## **Testing the WASM File**
+## ⚙️ Despliegue en Gear Idea
 
-```bash
-cd tests
-cargo test
+1. Ir a [Gear Idea](https://idea.gear-tech.io/)
+
+2. Crear y desplegar los siguientes contratos desde la sección `Code`:
+
+- **Pool**
+- **VFT**
+
+3. Agregar los campos del **constructor** correspondientes a cada contrato al momento del despliegue.
+
+---
+
+## 🏭 Agregar contrato Factory
+
+1. Desplegar el contrato `Factory` desde Gear Idea.
+
+2. En el constructor, se deben pasar los siguientes argumentos:
+
+```text
+pool_id  // ID del código del contrato Pool
+vft_id   // ID del código del contrato VFT
 ```
+
+---
+
+## 🛢️ Creación de Base de Datos en Supabase
+
+1. Crear una cuenta en [Supabase](https://supabase.com/)
+
+2. Ejecutar la siguiente query SQL desde el panel de Supabase:
+
+```sql
+CREATE TABLE pools (
+    id SERIAL PRIMARY KEY,
+    id_vara TEXT,
+    nombre TEXT,
+    modo_distribucion TEXT,
+    acceso TEXT,
+    tipo TEXT,
+    creador TEXT,
+    participantes JSONB,
+    transacciones JSONB,
+    created_at TIMESTAMP,
+    id_token INTEGER
+);
+
+CREATE TABLE tokens (
+    id SERIAL PRIMARY KEY,
+    name TEXT,
+    symbol TEXT,
+    decimal INTEGER,
+    created_at TIMESTAMPTZ,
+    owner TEXT,
+    txHash TEXT,
+    programId TEXT,
+    shares JSONB
+);
+```
+
+---
